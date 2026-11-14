@@ -41,17 +41,27 @@ not_proven:
 
 - **Required target:** ChatGPT ordinary Chat, not Work.
 - **Required connection mode:** **Server URL**, not Tunnel or any tunnel-like laptop forwarding.
-- **Architecture:** independent HTTPS-hosted read-only MCP endpoint -> ChatGPT custom MCP plugin via Server URL. Hosting/deployment is not yet approved or performed.
+- **Primary architecture (user-directed):** laptop Windows hosts the read-only MCP server behind a local HTTPS reverse proxy; normal ChatGPT Chat connects via public HTTPS **Server URL**. Public inbound reachability, DNS and routing are **not yet proven**. A managed-host Render Blueprint exists in source as **optional fallback only**, not the chosen route.
 - User has supplied a screenshot that confirms the custom MCP creation form and both connection tabs are visible. This proves UI availability only, not tool-call success.
 - Keep Windows/CDP 9444/private host services unreachable from public endpoint; future laptop agent linkage is separate P3.
 - Source of decision: [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2) user-constraint correction.
 
-## Next boundary: activate a dedicated HTTPS service (operator action)
+## Laptop-first connectivity diagnosis — 2026-11-14
 
-- The GitHub source and CI are ready; the hosting owner still needs to **approve and create** the Render Free evaluation web service from [this Blueprint](https://render.com/deploy?repo=https://github.com/trung-via/mcp-gateway).
-- Verify service configuration: name `mcp-gateway-health`, Python 3.11, Free plan, `main`, auto-deploy off, only the static read-only `gateway_health` tool. Never use Tunnel or ChatGPT Work.
-- Collect the **actual** Render HTTPS URL ending `/mcp`. Run `tests/probe_mcp_endpoint.py` against that URL, then register in ordinary ChatGPT Plugins **Server URL** and confirm a real tool call.
-- No operation on this GitHub repository creates a Render deployment automatically. No provider credentials are stored here. Do not close Issue #2 before LIVE evidence.
+Source: Human-supplied read-only PowerShell diagnostic output. **Avoid publishing exact user WAN/LAN IPs in this public repo.**
+
+- Confirmed: a private IPv4 Wi-Fi address, home router as default gateway, public IPv4 egress, and no TCP listeners on the candidate 80/443/8000/18080 ports.
+- `WAN_UNVERIFIED`: UPnP yielded no usable WAN address; cannot establish WAN=egress or whether router is behind CGNAT.
+- `INBOUND_UNTESTED`: no listener and no known router port-forward. A TCP test of the egress IP or a self-hairpin test would not prove external reachability.
+- A traceroute with one private address at an upstream ISP hop is **not proof of CGNAT**.
+- `NEXT_READONLY`: inspect global IPv6 availability and confirm local MCP readiness (loopback) without opening network ports.
+- `NETWORK_DEPENDENCY`: if IPv4 is required, check actual WAN assignment and arrange *authorized* 443 port forwarding via router access/ISP after a secured HTTPS-only endpoint is prepared; IPv6 likewise requires DNS, TLS, and perimeter firewall permit. Dynamic IP may need DDNS.
+- `SECURITY_STOP`: do not expose MCP via raw HTTP, automatically enable UPnP mapping, disable Windows firewall, or expose Chrome CDP 9444/host admin. Only public static `gateway_health` is allowed in this phase.
+- `LIVE_ACCEPTANCE`: from a truly external network, verify HTTPS MCP discovery/health and then a real tool call in **ordinary ChatGPT Chat**; the CI tests and any local tool calls do not satisfy this acceptance.
+
+### Current owner action
+
+Perform **read-only IPv6 inspection** and a **local-only MCP process test**. Do not spend money, create Render hosting, set up Tunnel/Work, or request unrestricted host permissions as a workaround for WAN uncertainty.
 
 ## Active task — GATEWAY-P0-004 / Issue #2
 
@@ -65,7 +75,7 @@ goal: Verify how this account can connect a real MCP tool in normal ChatGPT Chat
 allowed:
   - source-led capabilities research
   - read-only eligibility / available ChatGPT connection UI assessment
-  - independent HTTPS web-service hosting options and a bounded security approval proposal
+  - laptop-hosted HTTPS reverse-proxy feasibility (primary) and bounded security review
   - normal ChatGPT Chat only, using **Server URL**
 forbidden_without_separate_approval:
   - deploy any public endpoint or register paid hosting without a scoped approval
@@ -75,7 +85,7 @@ forbidden_without_separate_approval:
   - mark P2 LIVE without an observed ChatGPT tool call
 acceptance:
   - exact account/surface entitlement evidence
-  - approved independently hosted HTTPS Streamable HTTP endpoint ending /mcp (no Tunnel)
+  - approved reachable HTTPS Streamable HTTP endpoint on laptop, with actual WAN routing/DNS/TLS proof (no Tunnel)
   - discovered gateway_health in connected plugin
   - successful ChatGPT Chat tool call with receipt
 status: BLOCKED_LIVE_PROOF
