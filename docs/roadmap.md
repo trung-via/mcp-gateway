@@ -23,8 +23,8 @@
 | Task | Objective | Status | Acceptance |
 | --- | --- | --- | --- |
 | `GATEWAY-P1-001` | Choose SDK/protocol/transport and contract | **VERIFIED (DESIGN)** | Python `mcp==2.3.0`, Streamable HTTP localhost `/mcp`, modern MCP 2026-07-28 and compatibility with prior `initialize` clients, [gateway_health v1 contract](../contracts/tools/gateway_health.v1.md) |
-| `GATEWAY-P1-002` | Implement `gateway_health` MCP server and negative tests | **IN_PROGRESS (ISSUE)** | [Issue #1](https://github.com/trung-via/mcp-gateway/issues/1); branch/PR, MCP tool discovery and schema-valid call, safety-negative tests; source not yet accepted |
-| `GATEWAY-P1-003` | CI verification and Brain source acceptance | **NOT_STARTED** | Windows CI run on exact PR HEAD, tests + independent review; no implied live ChatGPT connection |
+| `GATEWAY-P1-002` | Implement `gateway_health` MCP server and negative tests | **IN_PROGRESS (CODE + TEST)** | [Issue #1](https://github.com/trung-via/mcp-gateway/issues/1); [Draft PR #3](https://github.com/trung-via/mcp-gateway/pull/3), head `a101fc5a339b72c1a4f115d270c6dff597c41db9`; **6 Python tests passed + Streamable HTTP smoke passed** [Windows CI run](https://github.com/trung-via/mcp-gateway/actions/runs/43582404606). Merge/ChatGPT connection not done. |
+| `GATEWAY-P1-003` | CI verification and Brain source acceptance | **IN_PROGRESS (TEST)** | Windows CI on exact PR head **PASS**: [run #43582404606](https://github.com/trung-via/mcp-gateway/actions/runs/43582404606), job `132409733091`. PR source review and acceptance/merge remain separate; no implied live ChatGPT connection. |
 
 ## P2 — real ChatGPT Chat integration
 
