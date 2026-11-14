@@ -67,6 +67,13 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Caddy dynv6 module absent (user observed) — 2026-11-15
+
+- Human ran `caddy list-modules | Select-String "dns.providers.dynv6"` on their Windows laptop and returned **no matching output**. Current Caddy binary does not include the optional dynv6 DNS provider. **NOT A GATEWAY FAILURE**; previous local HTTPS MCP JSON-RPC `gateway_health` remains PASS.
+- DNS-01 via Caddy currently requires an independently audited custom provider build and a **rotated** dynv6 API credential; neither is authorized or installed. **Defer DNS-01 plugin installation** until external IPv6 inbound viability is established and the added complexity is justified.
+- Draft PR #6 runbook updated to log this evidence; PR remains unmerged and its preflight PowerShell remains unexecuted on Windows. Next safe step: fetch only the PR script into a temporary location without switching the active working branch; inspect/run dry-run to check binding and Caddyfile syntax. It makes no firewall/router/listener/credential changes; only writes inert previews in user's home directory.
+- The user cannot log in to router and must not be asked again. No Tunnel/Render/Work as default. Separate scoped approval needed before any public 443 listener/firewall change.
+
 ## P2 no-router direct IPv6 preflight draft PR #6 — 2026-11-15
 
 - [Draft PR #6](https://github.com/trung-via/mcp-gateway/pull/6) OPEN / **UNMERGED**, branch `p2/windows-ipv6-no-router-preflight-20261115`, latest observed PR head `d2d6a04819d4517e8d383a3718d39eb63b525465`.
