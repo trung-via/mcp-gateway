@@ -9,7 +9,7 @@ Reconciled: **2026-11-14**. Canonical source: [`trung-via/mcp-gateway`](https://
 | `GATEWAY-P0-001` | VERIFIED / CODE | Public repo + baseline `90206124c1c04e754028a85a258ebcaee4b05e1c` |
 | `GATEWAY-P0-002` | VERIFIED / DESIGN | ADR-0001 and ADR-0002 accepted for bounded read-only MVP only |
 | `GATEWAY-P0-003` | VERIFIED / CODE (plugin source) | MCP Gateway Brain v0.1.1; cross-chat sync unverified |
-| `GATEWAY-P0-004` | BLOCKED / CODE + TEST + DOC (not LIVE) | [Issue #2 OPEN](https://github.com/trung-via/mcp-gateway/issues/2), [PR #5 merged](https://github.com/trung-via/mcp-gateway/pull/5) at `088b513362121913e432cac5a1cd69e6a22ef243`; [Windows CI 40 tests PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43587666927). Render Blueprint, exact Host/Origin allowlist and direct HTTPS runbook ready. **No external service deployed, URL registered, or ChatGPT Chat tool invocation observed.** |
+| `GATEWAY-P0-004` | BLOCKED / LOCAL LIVE MCP, not external/ChatGPT LIVE | [Issue #2 OPEN](https://github.com/trung-via/mcp-gateway/issues/2). Human laptop probe: **PASS discovery + `gateway_health` + `INVALID_PARAMS` against `127.0.0.1:8000/mcp`** (2026-11-14); [PR #5](https://github.com/trung-via/mcp-gateway/pull/5) merged and [40 Windows CI tests PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43587666927). **Still no direct inbound IPv6/HTTPS, plugin registration or ChatGPT Chat call.** Laptop-first; Render optional, not deployed. |
 | `GATEWAY-P1-001` | VERIFIED / DESIGN | `mcp==2.3.0`, [gateway_health contract](../contracts/tools/gateway_health.v1.md) |
 | `GATEWAY-P1-002` | VERIFIED / CODE + TEST | [Issue #1 closed](https://github.com/trung-via/mcp-gateway/issues/1); [PR #3 merged](https://github.com/trung-via/mcp-gateway/pull/3); merge commit `cabdb994bcb342d4b258adc468eafda2c40c3501` |
 | `GATEWAY-P1-003` | VERIFIED / TEST | [Windows PR CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43583208001) and [main CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43583364258): 6 tests + Streamable HTTP positive/invalid-params smoke |
@@ -46,6 +46,16 @@ not_proven:
 - Keep Windows/CDP 9444/private host services unreachable from public endpoint; future laptop agent linkage is separate P3.
 - Source of decision: [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2) user-constraint correction.
 
+## Verified local-runtime milestone — 2026-11-14
+
+User-observed Windows PowerShell evidence (local laptop; not GitHub runner):
+- Python 3.11 + pinned MCP SDK dependencies installed and `src.gateway.server` started on `http://127.0.0.1:8000/mcp`.
+- A separate local client ran `tests/probe_mcp_endpoint.py --url http://127.0.0.1:8000/mcp` and returned exactly **`PASS: MCP endpoint discovery, health response and INVALID_PARAMS`**.
+- This verifies **LOCAL_LIVE_MCP**: localhost transport, tool discovery, read-only tool invocation and rejection of unexpected arguments.
+- It **does not** verify the process remains running, public IPv6 ingress, HTTPS/TLS, DNS AAAA, router/Windows firewall, ChatGPT Plugin registration, or a native tool call from normal Chat.
+- Prior user-observed tests also found IPv6 default route count 1 and outbound `curl.exe -6` HTTPS status 200. The user has not provided full IPv6 addresses; never store them in this public worktree.
+- Next security-first steps: identify a non-temporary IPv6 address via privacy-preserving metadata; choose exact hostname/AAAA and local HTTPS reverse-proxy design; assess router/Windows IPv6 inbound firewall before any external test. Windows/CDP 9444 remains private; no Tunnel, Work or default Render hosting.
+
 ## Laptop-first connectivity diagnosis — 2026-11-14
 
 Source: Human-supplied read-only PowerShell diagnostic output. **Avoid publishing exact user WAN/LAN IPs in this public repo.**
@@ -61,7 +71,7 @@ Source: Human-supplied read-only PowerShell diagnostic output. **Avoid publishin
 
 ### Current owner action
 
-Perform **read-only IPv6 inspection** and a **local-only MCP process test**. Do not spend money, create Render hosting, set up Tunnel/Work, or request unrestricted host permissions as a workaround for WAN uncertainty.
+**Local MCP discovery and call PASS.** Next: inspect stable versus temporary IPv6 assignment (without exposing full IPv6), review hostname/AAAA and TLS reverse proxy, and read existing firewall policies. Do not open ports, spend money, create Render hosting, set up Tunnel/Work, or grant unrestricted host privileges until a scoped security review and explicit approval.
 
 ## Active task — GATEWAY-P0-004 / Issue #2
 
