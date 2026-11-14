@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## DDNS provider research — 2026-11-14
+
+**User confirmed no existing DNS name or DDNS hostname.** Proposed free provider: [dynv6](https://dynv6.com/), **PROPOSED / DOC**, not an account/hostname already created. The [official update API](https://dynv6.com/docs/apis) supports explicit `ipv6` AAAA record updates for `zone` and private `token` over HTTPS. This is appropriate for a globally routed IPv6 laptop whose ISP may renumber the /64 prefix. Alternate: [DuckDNS IPv6 update](https://www.duckdns.org/spec.jsp). A hostname example like `mcp-example.dynv6.net` is hypothetical and **not a deployed endpoint**.
+
+Operator-owned creation only: user may register a free dynv6 account and reserve a hostname. No secret/token should be posted to a ChatGPT message, GitHub issue, public repo or log. Do not publish an AAAA record pointing to the laptop until the bounded read-only HTTPS service and ingress security are reviewed. IPv4 A record is not recommended until actual inbound IPv4 routing is established.
+
+**Critical unsolved gates:** router IPv6 inbound firewall, Windows inbound firewall, DNS AAAA propagation, ACME TLS challenge (HTTP-01 requires inbound 80, TLS-ALPN-01 requires inbound 443; DNS-01 needs supported DNS API+credentials), and **unverified remote ChatGPT client reachability to an IPv6-only hostname**. The user previously saw a custom MCP create UI, but account-specific permissions and a real tool invocation remain unverified; OpenAI's current public help describes restrictions by plan.
+
+Status remains `GATEWAY-P0-004 BLOCKED / LOCAL LIVE MCP`; no Render, Tunnel or Work as default.
+
 ## Laptop-first connectivity diagnosis — 2026-11-14
 
 Source: Human-supplied read-only PowerShell diagnostic output. **Avoid publishing exact user WAN/LAN IPs in this public repo.**
