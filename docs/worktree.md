@@ -67,9 +67,19 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## AAAA public DNS resolution observed — 2026-11-15
+
+**User-observed Windows PowerShell output:** the user's registered dynv6 hostname resolves successfully to **one public IPv6 AAAA record, TTL 60**, using a query explicitly sent to `1.1.1.1`. Exact home IPv6 address and hostname are intentionally **not** copied into this public repo.
+
+- **DNS_RESOLUTION_PASS** only: public DNS advertises an IPv6 destination. This is a new verified step after the previously observed `AAAA records: 0`; the old zero-record observation is historical.
+- **IP_MATCH_UNVERIFIED**: have not yet established that the AAAA equals the local interface `SuffixOrigin=Link` address, rather than the `Random` privacy address or another machine. Use a privacy-preserving local address comparison that outputs `MATCH` or `MISMATCH` only.
+- **INGRESS_UNVERIFIED**: the home router may still block unsolicited IPv6 inbound; Windows firewall, certificate issuance, TLS listener, external Streamable HTTP transport and normal ChatGPT Chat MCP tool call are also unverified. IPv6 outbound 200 and localhost MCP client PASS remain separately proven, not a substitute for ingress.
+- **NEXT**: compare DNS AAAA to local `Link` address, confirm dynv6 token previously exposed in screenshot was revoked (no secrets copied to repo), prepare dedicated `src.gateway.public_server` on `127.0.0.1:18080` with exact hostname behind an HTTPS reverse proxy, and perform explicit scoped ingress security review **before** opening public 443. Do not publish Chrome CDP 9444 or private adapters.
+- For ACME HTTP-01/TLS-ALPN-01, required public ingress on 80/443 respectively must be tested; DNS-01 may avoid inbound issuance but not solve the remote MCP ingress problem. Direct IPv6-only reachability from the ChatGPT MCP integration surface remains to be proven.
+
 ## DDNS hostname creation observed — 2026-11-14
 
-User shared a screenshot of the dynv6 zone instructions page, demonstrating **dynv6 account signup and a zone hostname have been created**. Exact user hostname/zone ID deliberately omitted from this PUBLIC repository. **DNS AAAA resolution and external inbound IPv6 have not been tested** and zone activation status not independently queried.
+User shared a screenshot of the dynv6 zone instructions page, demonstrating **dynv6 account signup and a zone hostname have been created**. Exact user hostname/zone ID deliberately omitted from this PUBLIC repository. **This was true when the zone was created; a later 2026-11-15 AAAA query succeeded, but external inbound IPv6 remains untested** and zone activation status not independently queried.
 
 **Security incident / local operator action:** screenshot visibly includes a DDNS update credential/token in router setup instructions. Treat the token as compromised; **rotate/revoke it in the private dynv6 account**, update only privately stored local configuration, and avoid posting future credential-bearing screenshots. No token or fragment should be copied to issue, repo, chat outputs, scripts, or test logs.
 
