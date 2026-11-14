@@ -67,6 +67,14 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## DDNS hostname creation observed — 2026-11-14
+
+User shared a screenshot of the dynv6 zone instructions page, demonstrating **dynv6 account signup and a zone hostname have been created**. Exact user hostname/zone ID deliberately omitted from this PUBLIC repository. **DNS AAAA resolution and external inbound IPv6 have not been tested** and zone activation status not independently queried.
+
+**Security incident / local operator action:** screenshot visibly includes a DDNS update credential/token in router setup instructions. Treat the token as compromised; **rotate/revoke it in the private dynv6 account**, update only privately stored local configuration, and avoid posting future credential-bearing screenshots. No token or fragment should be copied to issue, repo, chat outputs, scripts, or test logs.
+
+Safe next gate: after revoking the token, inspect zone records (A/AAAA) in the account; do not guess or publish residential IPv6 address on public GitHub. With token rotation complete, plan the auto-update client to select the global `SuffixOrigin=Link` address and use the official HTTPS update API (`ipv6` explicit) without using the random/privacy IPv6 address. A dynamic /64 prefix still requires periodic reconciliation. Check real router and Windows IPv6 inbound firewall, certificate issuance, and ChatGPT remote ability to reach IPv6-only hostname before LIVE acceptance. No automatic firewall change or public MCP exposure.
+
 ## DDNS provider research — 2026-11-14
 
 **User confirmed no existing DNS name or DDNS hostname.** Proposed free provider: [dynv6](https://dynv6.com/), **PROPOSED / DOC**, not an account/hostname already created. The [official update API](https://dynv6.com/docs/apis) supports explicit `ipv6` AAAA record updates for `zone` and private `token` over HTTPS. This is appropriate for a globally routed IPv6 laptop whose ISP may renumber the /64 prefix. Alternate: [DuckDNS IPv6 update](https://www.duckdns.org/spec.jsp). A hostname example like `mcp-example.dynv6.net` is hypothetical and **not a deployed endpoint**.
