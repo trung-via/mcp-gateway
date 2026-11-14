@@ -1,0 +1,27 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*token*
+.secrets/
+credentials/
+
+# Python, JS, build and OS
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+dist/
+build/
+.pytest_cache/
+.coverage
+.DS_Store
+Thumbs.db
+
+# Private evidence/logs
+logs/
+private/
+*.log
