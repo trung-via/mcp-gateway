@@ -9,7 +9,7 @@ Reconciled: **2026-11-14**. Canonical source: [`trung-via/mcp-gateway`](https://
 | `GATEWAY-P0-001` | VERIFIED / CODE | Public repo + baseline `90206124c1c04e754028a85a258ebcaee4b05e1c` |
 | `GATEWAY-P0-002` | VERIFIED / DESIGN | ADR-0001 and ADR-0002 accepted for bounded read-only MVP only |
 | `GATEWAY-P0-003` | VERIFIED / CODE (plugin source) | MCP Gateway Brain v0.1.1; cross-chat sync unverified |
-| `GATEWAY-P0-004` | BLOCKED / DOC | [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2), [research report](research/chatgpt-mcp-connection-feasibility-2026-11-14.md); account UI and endpoint unavailable for live proof |
+| `GATEWAY-P0-004` | BLOCKED / CODE + TEST + DOC (not LIVE) | [Issue #2 OPEN](https://github.com/trung-via/mcp-gateway/issues/2), [PR #4 merged](https://github.com/trung-via/mcp-gateway/pull/4), `bf7b649ea05429656c7345d98f58ba96c59ceb8b`, [main CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43584905472): 20 tests and loopback MCP endpoint probe; [P2 runbook](p2-connection-runbook.md). ChatGPT connection not observed. |
 | `GATEWAY-P1-001` | VERIFIED / DESIGN | `mcp==2.3.0`, [gateway_health contract](../contracts/tools/gateway_health.v1.md) |
 | `GATEWAY-P1-002` | VERIFIED / CODE + TEST | [Issue #1 closed](https://github.com/trung-via/mcp-gateway/issues/1); [PR #3 merged](https://github.com/trung-via/mcp-gateway/pull/3); merge commit `cabdb994bcb342d4b258adc468eafda2c40c3501` |
 | `GATEWAY-P1-003` | VERIFIED / TEST | [Windows PR CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43583208001) and [main CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43583364258): 6 tests + Streamable HTTP positive/invalid-params smoke |
