@@ -1,0 +1,44 @@
+name: P1 read-only MCP protocol tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  mcp-python:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pinned dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - name: Python syntax
+        run: python -m compileall -q src tests
+      - name: In-process MCP protocol tests
+        run: python -m pytest -q tests/test_gateway_health.py
+      - name: Local Streamable HTTP smoke
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath python -ArgumentList "-m", "src.gateway.server" -PassThru -NoNewWindow
+          try {
+            $passed = $false
+            for ($i = 0; $i -lt 15; $i++) {
+              Start-Sleep -Seconds 2
+              python tests/smoke_http.py
+              if ($LASTEXITCODE -eq 0) {
+                $passed = $true
+                break
+              }
+            }
+            if (-not $passed) { throw "Streamable HTTP smoke failed or never became ready" }
+          }
+          finally {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          }
