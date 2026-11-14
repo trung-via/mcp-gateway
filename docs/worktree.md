@@ -56,6 +56,17 @@ User-observed Windows PowerShell evidence (local laptop; not GitHub runner):
 - Prior user-observed tests also found IPv6 default route count 1 and outbound `curl.exe -6` HTTPS status 200. The user has not provided full IPv6 addresses; never store them in this public worktree.
 - Next security-first steps: identify a non-temporary IPv6 address via privacy-preserving metadata; choose exact hostname/AAAA and local HTTPS reverse-proxy design; assess router/Windows IPv6 inbound firewall before any external test. Windows/CDP 9444 remains private; no Tunnel, Work or default Render hosting.
 
+## IPv6 address-selection evidence — 2026-11-14
+
+Human-provided Windows read-only metadata for two preferred global IPv6 candidates on Wi-Fi (full addresses omitted):
+
+- Candidate 1: `PrefixOrigin=RouterAdvertisement`, `SuffixOrigin=Link`, `PrefixLength=64`, `SkipAsSource=False`, preferred and valid lifetimes ~12h21m. **Better candidate for receiving traffic/DNS** because its suffix derives from a link-layer address; **not proven stable across RA prefix changes, reconnection or ISP renumbering**.
+- Candidate 2: `PrefixOrigin=RouterAdvertisement`, `SuffixOrigin=Random`, `PrefixLength=128`, same observed lifetimes, `SkipAsSource=False`. Avoid using this randomly derived candidate for static DNS AAAA.
+- Neither entry proves external IPv6 ingress. Inbound router/Windows filtering, a reachable hostname and public TLS remain **UNVERIFIED**; do not expose ports from this metadata.
+- The ~12h lifetime is a remaining validity/preference window and may be refreshed by router advertisement; it is not a hard expiry or a guarantee of prefix persistence.
+- Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
+- Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
+
 ## Laptop-first connectivity diagnosis — 2026-11-14
 
 Source: Human-supplied read-only PowerShell diagnostic output. **Avoid publishing exact user WAN/LAN IPs in this public repo.**
