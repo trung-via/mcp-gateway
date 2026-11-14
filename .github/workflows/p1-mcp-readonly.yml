@@ -1,4 +1,4 @@
-name: P1 read-only MCP protocol tests
+name: MCP read-only protocol and P2 connection probe
 
 on:
   pull_request:
@@ -22,7 +22,7 @@ jobs:
       - name: Python syntax
         run: python -m compileall -q src tests
       - name: In-process MCP protocol tests
-        run: python -m pytest -q tests/test_gateway_health.py
+        run: python -m pytest -q tests/test_gateway_health.py tests/test_connection_probe.py
       - name: Local Streamable HTTP smoke
         shell: pwsh
         run: |
@@ -32,6 +32,9 @@ jobs:
             for ($i = 0; $i -lt 15; $i++) {
               Start-Sleep -Seconds 2
               python tests/smoke_http.py
+              if ($LASTEXITCODE -eq 0) {
+                python tests/probe_mcp_endpoint.py --url http://127.0.0.1:8000/mcp
+              }
               if ($LASTEXITCODE -eq 0) {
                 $passed = $true
                 break
