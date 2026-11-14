@@ -9,7 +9,7 @@ Reconciled: **2026-11-14**. Canonical source: [`trung-via/mcp-gateway`](https://
 | `GATEWAY-P0-001` | VERIFIED / CODE | Public repo + baseline `90206124c1c04e754028a85a258ebcaee4b05e1c` |
 | `GATEWAY-P0-002` | VERIFIED / DESIGN | ADR-0001 and ADR-0002 accepted for bounded read-only MVP only |
 | `GATEWAY-P0-003` | VERIFIED / CODE (plugin source) | MCP Gateway Brain v0.1.1; cross-chat sync unverified |
-| `GATEWAY-P0-004` | BLOCKED / CODE + TEST + DOC (not LIVE) | [Issue #2 OPEN](https://github.com/trung-via/mcp-gateway/issues/2), [PR #4 merged](https://github.com/trung-via/mcp-gateway/pull/4), `bf7b649ea05429656c7345d98f58ba96c59ceb8b`, [main CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43584905472): 20 tests and loopback MCP endpoint probe; [P2 runbook](p2-connection-runbook.md). ChatGPT connection not observed. |
+| `GATEWAY-P0-004` | BLOCKED / CODE + TEST + DOC (not LIVE) | [Issue #2 OPEN](https://github.com/trung-via/mcp-gateway/issues/2), [PR #5 merged](https://github.com/trung-via/mcp-gateway/pull/5) at `088b513362121913e432cac5a1cd69e6a22ef243`; [Windows CI 40 tests PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43587666927). Render Blueprint, exact Host/Origin allowlist and direct HTTPS runbook ready. **No external service deployed, URL registered, or ChatGPT Chat tool invocation observed.** |
 | `GATEWAY-P1-001` | VERIFIED / DESIGN | `mcp==2.3.0`, [gateway_health contract](../contracts/tools/gateway_health.v1.md) |
 | `GATEWAY-P1-002` | VERIFIED / CODE + TEST | [Issue #1 closed](https://github.com/trung-via/mcp-gateway/issues/1); [PR #3 merged](https://github.com/trung-via/mcp-gateway/pull/3); merge commit `cabdb994bcb342d4b258adc468eafda2c40c3501` |
 | `GATEWAY-P1-003` | VERIFIED / TEST | [Windows PR CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43583208001) and [main CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43583364258): 6 tests + Streamable HTTP positive/invalid-params smoke |
@@ -45,6 +45,13 @@ not_proven:
 - User has supplied a screenshot that confirms the custom MCP creation form and both connection tabs are visible. This proves UI availability only, not tool-call success.
 - Keep Windows/CDP 9444/private host services unreachable from public endpoint; future laptop agent linkage is separate P3.
 - Source of decision: [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2) user-constraint correction.
+
+## Next boundary: activate a dedicated HTTPS service (operator action)
+
+- The GitHub source and CI are ready; the hosting owner still needs to **approve and create** the Render Free evaluation web service from [this Blueprint](https://render.com/deploy?repo=https://github.com/trung-via/mcp-gateway).
+- Verify service configuration: name `mcp-gateway-health`, Python 3.11, Free plan, `main`, auto-deploy off, only the static read-only `gateway_health` tool. Never use Tunnel or ChatGPT Work.
+- Collect the **actual** Render HTTPS URL ending `/mcp`. Run `tests/probe_mcp_endpoint.py` against that URL, then register in ordinary ChatGPT Plugins **Server URL** and confirm a real tool call.
+- No operation on this GitHub repository creates a Render deployment automatically. No provider credentials are stored here. Do not close Issue #2 before LIVE evidence.
 
 ## Active task — GATEWAY-P0-004 / Issue #2
 
