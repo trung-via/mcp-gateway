@@ -5,7 +5,9 @@ import builtins
 import os
 import subprocess
 
-from mcp import Client
+from mcp import Client, MCPError
+from mcp.types import INVALID_PARAMS
+import pytest
 
 from src.gateway.server import HealthResponse, gateway_health, mcp
 
@@ -58,19 +60,27 @@ def test_legacy_mcp_discovery_and_call():
     asyncio.run(exercise_protocol(mode="legacy"))
 
 
-async def assert_rejected(name: str, args: dict):
+async def reject_unexpected_argument_with_protocol_code():
     async with Client(mcp, raise_exceptions=True) as client:
-        try:
-            result = await client.call_tool(name, args)
-        except Exception:
-            # MCP protocol may raise for unknown tools or rejected arguments.
-            return
-        assert result.is_error, "invalid call must not silently return success"
+        with pytest.raises(MCPError) as error:
+            await client.call_tool("gateway_health", {"unexpected": True})
+        assert error.value.code == INVALID_PARAMS
 
 
 def test_reject_unexpected_argument():
-    asyncio.run(assert_rejected("gateway_health", {"unexpected": True}))
+    asyncio.run(reject_unexpected_argument_with_protocol_code())
+
+
+async def reject_unknown_tool():
+    async with Client(mcp, raise_exceptions=True) as client:
+        try:
+            result = await client.call_tool("gateway_missing", {})
+        except MCPError as error:
+            # Some MCP protocol versions reject an unknown tool at JSON-RPC level.
+            assert error.code != 0, "unknown tool must expose a non-success protocol code"
+            return
+        assert result.is_error, "unknown tool must not silently return success"
 
 
 def test_reject_unknown_tool():
-    asyncio.run(assert_rejected("gateway_missing", {}))
+    asyncio.run(reject_unknown_tool())
