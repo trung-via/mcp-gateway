@@ -67,6 +67,14 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## P2 no-router direct IPv6 preflight draft PR #6 — 2026-11-15
+
+- [Draft PR #6](https://github.com/trung-via/mcp-gateway/pull/6) OPEN / **UNMERGED**, branch `p2/windows-ipv6-no-router-preflight-20261115`, latest observed PR head `d2d6a04819d4517e8d383a3718d39eb63b525465`.
+- New runbook `docs/p2-windows-no-router-ipv6.md`: distinguishes certificate issuance by dynv6 DNS-01 **without** router/ingress from actual external IPv6 reachability test. Caddy dynv6 plugin exists as a community module and needs independent security review and rotated token; stock Caddy may lack it.
+- New Windows PowerShell 7.0 dry-run preflight `scripts/p2-windows-ipv6-preflight.ps1`: reads DNS AAAA, `SuffixOrigin=Link` selected local IPv6, effective Private inbound Block, backend loopback listener, absence of TCP 443 listener and Caddy DNS module presence; writes only two inert preview Caddyfiles locally with exact IPv6 TCP 443 ALPN or loopback-only DNS-01; **no router login/port edits, Firewall edits, listener startup, certificate requests, DNS updates or secrets**.
+- **Evidence tier: SOURCE preparation only; draft PR script has not been executed on Windows or reviewed by CI; it is not deployed.** User-proven local HTTPS MCP protocol/tool call remains PASS. Public TLS trust, router IPv6 ingress, external MCP, and ChatGPT Chat tool call remain UNVERIFIED.
+- Next: operator read-only `caddy list-modules | Select-String dns.providers.dynv6`, independent PR review and dry-run on Windows. Do not activate any public port without separately scoped human approval and rollback. No Tunnel, Render, Work or CDP 9444 exposure.
+
 ## Router administration unavailable — fixed user constraint (2026-11-15)
 
 **Explicit Human correction:** The owner previously stated and reiterated they **cannot log in to the home router `192.168.1.1`**. Previous Brain guidance incorrectly requested router login again. **Do not ask again for router admin UI, credentials, model/settings requiring authentication, port forwarding or IPv6 firewall changes inside the router.** Treat this as a hard operator constraint.
