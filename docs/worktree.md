@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Router administration unavailable — fixed user constraint (2026-11-15)
+
+**Explicit Human correction:** The owner previously stated and reiterated they **cannot log in to the home router `192.168.1.1`**. Previous Brain guidance incorrectly requested router login again. **Do not ask again for router admin UI, credentials, model/settings requiring authentication, port forwarding or IPv6 firewall changes inside the router.** Treat this as a hard operator constraint.
+
+- **Accepted direction unchanged:** MCP Gateway self-hosted on Windows laptop, public dynv6 hostname → direct IPv6 HTTPS → Caddy → read-only MCP; no Tunnel, Work, Render, or CDP 9444 exposure as default.
+- **Observed:** DNS AAAA to laptop MATCH; IPv6 outbound Internet; local Caddy TLS/JSON-RPC initialize+ready+gateway_health PASS; Wi-Fi Private; effective Windows firewall default inbound Block; only `127.0.0.1:8443` and `127.0.0.1:18080` listeners. These **do not** prove upstream router IPv6 inbound policy.
+- **Feasible no-router-login probe, NOT yet authorized or executed:** prepare a production-ready narrow Caddy public IPv6/443 listener hosting only `gateway_health`; require public CA validation (TLS-ALPN-01 on 443 if router permits; DNS-01 only with suitable provider); temporarily add one Windows Private inbound TCP 443 allow rule tied to expected Caddy process/program, with explicit Human approval, duration, external test plan and rollback. Independently test IPv6/443 from an off-LAN IPv6-capable client (e.g., phone cellular or trusted external probe). No router access is needed **to attempt** this test.
+- **Crucial conditional blocker:** If router's inbound IPv6 firewall blocks unsolicited traffic, **Windows-side changes cannot bypass it**. Classify `ROUTER_IPV6_INGRESS_BLOCKED_OR_UNKNOWN` until independent test. The remaining routes then require ISP/router operator cooperation or an **explicit separate user architecture decision**, not repeated router-admin requests or silent Tunnel/Render deployment.
+- **Safety**: existing dynv6 token had previously appeared in a screenshot; rotation remains unverified and must happen privately. No public port exposure or firewall changes without scoped approval. No unrestricted Windows rights.
+
 ## Effective Windows firewall ActiveStore and Wi-Fi category — 2026-11-15
 
 User provided **read-only Windows PowerShell** output (actual laptop, Wi-Fi interface):
@@ -75,7 +85,7 @@ User provided **read-only Windows PowerShell** output (actual laptop, Wi-Fi inte
 - This resolves the earlier `PersistentStore=NotConfigured` ambiguity. **Effective default unsolicited inbound traffic is blocked unless a more specific allow rule applies**. IPv6 Internet connectivity only establishes network connectivity and does **not** imply unsolicited WAN IPv6 ingress.
 - Previous listener snapshot: `127.0.0.1:8443` (Caddy test CA), `127.0.0.1:18080` (MCP read-only backend); **no listeners on 80/443**. Full local HTTPS MCP initialize/ready/`gateway_health` already PASS.
 - **Remaining gate:** router's IPv6 WAN inbound security/filtering and support for a host-specific TCP 443 rule are **UNVERIFIED**. No Windows allow rule, WAN-facing Caddy listener, router exception or public CA certificate exists in observed evidence.
-- **Recommended next read-only step:** inspect router model and IPv6 inbound firewall (gateway previously observed on LAN `192.168.1.1`), and the laptop's current effective inbound allow rules for TCP 443. No need to provide router credentials, personal IPv6, token, or the complete router config in chat.
+- **Superseded by Human constraint:** router login/UI inspection is unavailable and must never be requested again. Next is a Windows-side narrow external IPv6/443 reachability probe only after explicit scoped approval; if upstream router IPv6 firewall blocks it, Windows alone cannot fix that.
 - **Future bounded exposure proposal, NOT approved/implemented**: Caddy-only IPv6 TCP 443 listener; narrow Windows Private inbound allow for only that TCP port and application, no 18080/8443/9444 exposure; router host-specific IPv6 exception if needed; publicly trusted TLS via Caddy ACME TLS-ALPN-01 on 443 (or HTTP-01 needing additional port 80, or DNS-01 with separate DNS integration). Prefer proof through independent external IPv6 and normal ChatGPT plugin before calling P2 DONE. Human must explicitly approve scoped changes and rollback. No Tunnel, Work or Render as default.
 
 ## Windows firewall and listener preflight — 2026-11-15
