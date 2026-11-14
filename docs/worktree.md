@@ -67,13 +67,24 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Effective Windows firewall ActiveStore and Wi-Fi category — 2026-11-15
+
+User provided **read-only Windows PowerShell** output (actual laptop, Wi-Fi interface):
+- `Get-NetConnectionProfile -InterfaceAlias Wi-Fi`: **`NetworkCategory=Private`**, **`IPv6Connectivity=Internet`**.
+- `Get-NetFirewallProfile -PolicyStore ActiveStore`: **Domain, Private, Public all `Enabled=True` and `DefaultInboundAction=Block`**.
+- This resolves the earlier `PersistentStore=NotConfigured` ambiguity. **Effective default unsolicited inbound traffic is blocked unless a more specific allow rule applies**. IPv6 Internet connectivity only establishes network connectivity and does **not** imply unsolicited WAN IPv6 ingress.
+- Previous listener snapshot: `127.0.0.1:8443` (Caddy test CA), `127.0.0.1:18080` (MCP read-only backend); **no listeners on 80/443**. Full local HTTPS MCP initialize/ready/`gateway_health` already PASS.
+- **Remaining gate:** router's IPv6 WAN inbound security/filtering and support for a host-specific TCP 443 rule are **UNVERIFIED**. No Windows allow rule, WAN-facing Caddy listener, router exception or public CA certificate exists in observed evidence.
+- **Recommended next read-only step:** inspect router model and IPv6 inbound firewall (gateway previously observed on LAN `192.168.1.1`), and the laptop's current effective inbound allow rules for TCP 443. No need to provide router credentials, personal IPv6, token, or the complete router config in chat.
+- **Future bounded exposure proposal, NOT approved/implemented**: Caddy-only IPv6 TCP 443 listener; narrow Windows Private inbound allow for only that TCP port and application, no 18080/8443/9444 exposure; router host-specific IPv6 exception if needed; publicly trusted TLS via Caddy ACME TLS-ALPN-01 on 443 (or HTTP-01 needing additional port 80, or DNS-01 with separate DNS integration). Prefer proof through independent external IPv6 and normal ChatGPT plugin before calling P2 DONE. Human must explicitly approve scoped changes and rollback. No Tunnel, Work or Render as default.
+
 ## Windows firewall and listener preflight — 2026-11-15
 
 Human-provided Windows PowerShell read-only `Get-NetFirewallProfile` and listener outputs:
 - Three firewall profiles **Domain, Private, Public `Enabled=True`**, each showed `DefaultInboundAction=NotConfigured` in the query's default/persistent policy store. **Do not infer an allow-all or block-all effective result from `NotConfigured`.** Default action in the actually applied profile and any effective inbound allow rules remain unverified; Microsoft recommends `Get-NetFirewallProfile -PolicyStore ActiveStore` for resultant effective policy.
 - `Get-NetTCPConnection -State Listen` filtered to 80/443/8443/18080 returned **only** `127.0.0.1:8443 Listen` (Caddy test TLS) and `127.0.0.1:18080 Listen` (read-only MCP backend). No listeners on **80 or 443** at this observation. This is an expected safe baseline, **not** proof of public IPv6 reachability. No public listener or inbound firewall/router change was made.
 - Existing direct local HTTPS MCP `initialize 200` + `ready 202` + `gateway_health 200` **PASS** still stands.
-- **Next read-only Windows evidence**: `Get-NetConnectionProfile -InterfaceAlias Wi-Fi | Select InterfaceAlias,NetworkCategory,IPv6Connectivity` and `Get-NetFirewallProfile -PolicyStore ActiveStore | Select Name,Enabled,DefaultInboundAction`; if `NotConfigured` persists, report effective inbound policy as undetermined rather than guessing. Review current rule state before any narrow change.
+- **Next read-only Windows evidence COMPLETED (2026-11-15):** Wi-Fi Private + IPv6 Internet; `ActiveStore` Domain/Private/Public Enabled True, DefaultInboundAction Block. Next inspect router IPv6 WAN firewall and existing effective inbound TCP 443 rules; no mutation.
 - **Next router evidence**: IPv6 WAN inbound/perimeter firewall support and per-device exceptions for TCP 443; as yet **UNVERIFIED**. Without router access, user-provided router UI details are needed before any targeted ingress plan.
 - **Public certificate consideration**: Caddy automatic TLS normally needs externally reachable port 80 for HTTP-01 or 443 for TLS-ALPN-01; separate DNS-01 challenge needs supported DNS API module/secret. No ACME/public TLS attempts before an approved network plan. Scope is HTTPS port 443 to Caddy only; never open CDP 9444 or backend 18080, disable Windows Firewall, or use Tunnel/Render/Work as primary.
 
