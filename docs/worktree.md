@@ -67,6 +67,29 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Windows no-mutation IPv6 preflight PASS — 2026-11-15
+
+**Human actual laptop execution (PowerShell 7):** fetched Draft [PR #6](https://github.com/trung-via/mcp-gateway/pull/6) script `scripts/p2-windows-ipv6-preflight.ps1` via Git `FETCH_HEAD` into local temp location (without switching the repo branch); executed with the operator's actual dynv6 hostname. Output was exactly:
+
+```text
+WIFI_PROFILE=Private
+IPV6_INTERNET=PASS
+EFFECTIVE_INBOUND_DEFAULT=Block
+DNS_TO_LAPTOP=MATCH
+PORT_443=NOT_LISTENING
+MCP_BACKEND_18080=LOOPBACK_ONLY
+CADDY_ALPN_PREVIEW_ADAPT=PASS
+CADDY_DYNV6_DNS_MODULE=ABSENT
+NO_MUTATION=No listeners, firewall rules, DNS records, router settings or certificates changed
+SECURITY_STOP=Do not run either preview without separate scoped approval
+```
+
+The script also wrote two inert `Caddyfile.*.preview` files under the **user's home directory**. Exact home path and current global IPv6 bind value intentionally omitted from public GitHub. These previews are **NOT** permission to run a public listener. No token was used/read. This is **WINDOWS_P2_PREFLIGHT_PASS / USER_LIVE**, and a separate, current GitHub [CI run 43654864139](https://github.com/trung-via/mcp-gateway/actions/runs/43654864139) was reported SUCCESS on the PR branch's latest known commit; **CI only runs Python MCP/ASGI tests, not the Windows PowerShell script**, so user-observed Windows preflight is the direct witness.
+
+**Gate complete:** source and dry-run preflight readiness. **Still BLOCKED**: public trusted TLS cert, router IPv6 ingress (router login unavailable), IPv6 external-network reachability to laptop, ChatGPT normal Chat plugin tool invocation, prior exposed dynv6 token rotation confirmation.
+
+**NEXT / security review before any public change:** audit current active TCP 443 allow rules (read-only), define one temporary Caddy IPv6/443 listener and narrowly scoped Windows Private inbound rule with explicit user approval, set an external IPv6 client and a bounded time/rollback procedure. Do not run the preview nor install DNS module yet. If router firewall drops unsolicited IPv6, no host-side workaround can fix it within the accepted direct-no-tunnel architecture.
+
 ## Caddy dynv6 module absent (user observed) — 2026-11-15
 
 - Human ran `caddy list-modules | Select-String "dns.providers.dynv6"` on their Windows laptop and returned **no matching output**. Current Caddy binary does not include the optional dynv6 DNS provider. **NOT A GATEWAY FAILURE**; previous local HTTPS MCP JSON-RPC `gateway_health` remains PASS.
