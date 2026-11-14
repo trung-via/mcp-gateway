@@ -1,0 +1,11 @@
+# Source-only blueprint. This file DOES NOT deploy or activate a Render service.
+# Creation requires a separate authorized action in the owner's Render account.
+services:
+  - type: web
+    name: mcp-gateway-health
+    runtime: python
+    plan: free
+    branch: main
+    autoDeployTrigger: off
+    buildCommand: python -m pip install --disable-pip-version-check -r requirements.txt
+    startCommand: python -m src.gateway.public_server

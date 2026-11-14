@@ -1,4 +1,4 @@
-name: MCP read-only protocol and P2 connection probe
+name: MCP read-only protocol, HTTPS host entrypoint and connection probe
 
 on:
   pull_request:
@@ -22,7 +22,7 @@ jobs:
       - name: Python syntax
         run: python -m compileall -q src tests
       - name: In-process MCP protocol tests
-        run: python -m pytest -q tests/test_gateway_health.py tests/test_connection_probe.py
+        run: python -m pytest -q tests/test_gateway_health.py tests/test_connection_probe.py tests/test_public_hosting.py
       - name: Local Streamable HTTP smoke
         shell: pwsh
         run: |
@@ -41,6 +41,30 @@ jobs:
               }
             }
             if (-not $passed) { throw "Streamable HTTP smoke failed or never became ready" }
+          }
+          finally {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Hosted ASGI entrypoint and strict Host/Origin smoke
+        shell: pwsh
+        run: |
+          $env:MCP_PUBLIC_HOSTNAME = "localhost"
+          $env:PORT = "18080"
+          $p = Start-Process -FilePath python -ArgumentList "-m", "src.gateway.public_server" -PassThru -NoNewWindow
+          try {
+            $passed = $false
+            for ($i = 0; $i -lt 15; $i++) {
+              Start-Sleep -Seconds 2
+              python tests/probe_mcp_endpoint.py --url http://localhost:18080/mcp
+              if ($LASTEXITCODE -eq 0) {
+                $passed = $true
+                break
+              }
+            }
+            if (-not $passed) { throw "Hosted ASGI endpoint never passed its positive MCP probe" }
+            python tests/smoke_public_host.py
+            if ($LASTEXITCODE -ne 0) { throw "Host/Origin negative security smoke failed" }
           }
           finally {
             Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
