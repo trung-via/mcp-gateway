@@ -67,6 +67,19 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Host allowlist localhost proof — 2026-11-15
+
+**User-observed PowerShell curl proof against running `src.gateway.public_server` on loopback `127.0.0.1:18080` with the dynv6 hostname configured**:
+- HTTP HEAD request with DNS/SNI override `--resolve <hostname>:18080:127.0.0.1` and correct Host: **`ALLOWED_HOST_HTTP: 405`**. Expected because HEAD method is unsupported by MCP; proof that Host passed allowlist.
+- HTTP HEAD request with fake Host `unauthorized.example.org`: **`DENIED_HOST_HTTP: 421`**, reproduced; server correctly rejects unapproved Host.
+- An initial GET had stalled; it was replaced by short-timeout HEAD. No inference of server defect or of MCP tool-call protocol acceptance from this probe.
+
+**Evidence status**: `LOCAL_HOST_ALLOWLIST_PASS` (user-observed). Separate localhost `gateway_health` invocation was previously proven on P1 port 8000; no direct `gateway_health` from the P2 18080 entrypoint yet.
+
+**NEXT strictly local**: install/verify Caddy without running a service automatically; prepare Caddyfile on host with `auto_https disable_redirects`, `skip_install_trust`, `tls internal`, `bind 127.0.0.1`, dedicated HTTPS `:8443`, reverse proxy to `127.0.0.1:18080`, and **no admin API**. Use `curl.exe --resolve <hostname>:8443:127.0.0.1 -k --head --max-time 5` for a bounded local TLS/Host routing check and separate forbidden-host test; `-k` is solely for local testing with an internal CA, **never a production exception**. Check for unexpected listeners 80/443/8443 before and after. No public ingress, Windows firewall changes, router changes, tunnels, Work or Render.
+
+External production TLS requires a publicly trusted certificate and authorized inbound rules after separate approval; local `tls internal` does not satisfy the public ChatGPT MCP endpoint gate. Prior leaked dynv6 token rotation remains human-private and not yet evidenced.
+
 ## AAAA public DNS resolution observed — 2026-11-15
 
 **User-observed Windows PowerShell output:** the user's registered dynv6 hostname resolves successfully to **one public IPv6 AAAA record, TTL 60**, using a query explicitly sent to `1.1.1.1`. Exact home IPv6 address and hostname are intentionally **not** copied into this public repo.
@@ -74,7 +87,7 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - **DNS_RESOLUTION_PASS** only: public DNS advertises an IPv6 destination. This is a new verified step after the previously observed `AAAA records: 0`; the old zero-record observation is historical.
 - **IP_MATCH_PASS / USER-OBSERVED 2026-11-15:** Human ran the privacy-preserving local comparison of DNS AAAA against the preferred Wi-Fi global IPv6 with `SuffixOrigin=Link`; output was exactly `DNS_TO_LAPTOP: MATCH`. This supersedes `IP_MATCH_UNVERIFIED`; no full IPv6 was disclosed in repo.
 - **INGRESS_UNVERIFIED**: the home router may still block unsolicited IPv6 inbound; Windows firewall, certificate issuance, TLS listener, external Streamable HTTP transport and normal ChatGPT Chat MCP tool call are also unverified. IPv6 outbound 200 and localhost MCP client PASS remain separately proven, not a substitute for ingress.
-- **NEXT**: test `src.gateway.public_server` bound to `127.0.0.1:18080` with exact `MCP_PUBLIC_HOSTNAME` and locally simulated DNS via `curl --resolve` (correct Host accepted, unauthorized Host rejected with 421). Then test a Caddy HTTPS reverse proxy on loopback only before any scoped ingress review/public 443. Confirm that the dynv6 token previously exposed in screenshot was revoked; no secrets copied to repo. Do not publish Chrome CDP 9444 or private adapters.
+- **NEXT** (2026-11-15 after Host allowlist PASS): set up Caddy local-only TLS on `127.0.0.1:8443` reverse proxy to existing P2 `127.0.0.1:18080`; test TLS and correct/invalid Host via `curl --resolve`. Do not open public 443, modify Windows/router firewall, or expose CDP 9444. Confirm privately that leaked dynv6 token was revoked.
 - For ACME HTTP-01/TLS-ALPN-01, required public ingress on 80/443 respectively must be tested; DNS-01 may avoid inbound issuance but not solve the remote MCP ingress problem. Direct IPv6-only reachability from the ChatGPT MCP integration surface remains to be proven.
 
 ## DDNS hostname creation observed — 2026-11-14
