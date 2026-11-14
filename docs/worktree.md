@@ -67,13 +67,32 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Local HTTPS MCP protocol and tool-call witness — 2026-11-15
+
+Human PowerShell `curl.exe --resolve <registered-dynv6-host>:8443:127.0.0.1 -k` (internal CA test only) posted the following **actual HTTP+JSON-RPC responses through Caddy 8443 → read-only `src.gateway.public_server` loopback 18080**:
+
+- `MCP_INIT`: **HTTP 200**, `jsonrpc=2.0`, `id=1`, `result.protocolVersion=2025-11-25`, serverInfo.name=`mcp-gateway` (serverInfo.version presently empty string; nonblocking metadata discrepancy).
+- `MCP_READY`: **HTTP 202**, notification accepted.
+- `MCP_HEALTH`: **HTTP 200**, `jsonrpc=2.0`, `id=2`, `isError=false`, and exact `structuredContent={"service":"mcp-gateway","version":"0.1.0","status":"ok"}`.
+
+**Evidence:** `LOCAL_HTTPS_MCP_TOOL_CALL_PASS / USER_LIVE` — handshake, readiness notification, real tool invocation and deterministic structured result crossed Caddy + MCP public entrypoint via HTTPS on the laptop. Distinct from the prior P1 direct HTTP port 8000 and CI results. Tests used `-k` for **private Caddy internal CA**, which is not a publicly trusted ChatGPT endpoint. Do not mistake local `--resolve` override for IPv6 inbound proof.
+
+**Remaining blockers (not yet verified):**
+1. Production public trust chain / ACME certificate for the registered hostname; no `-k` override.
+2. Server binding on intended public interface/443 and separately approved Windows inbound + router IPv6 firewall rule (no changes yet).
+3. Independent external-network IPv6 HTTPS+MCP test, especially ChatGPT remote client's ability to connect to IPv6-only DNS.
+4. ChatGPT regular Chat Server URL plugin registration and actual `gateway_health` invocation.
+5. Dynv6 update token seen in earlier screenshot must be revoked/rotated privately (confirmation unobserved); DDNS automatic refresh still not implemented.
+
+**Next safe read-only work:** inspect current firewall **policy only** (`Get-NetFirewallProfile` and scoped existing rules) and confirm Caddy only listens 127.0.0.1:8443, MCP at 127.0.0.1:18080. Prepare separate production Caddy config, user authorization and rollback before any public listener/firewall/router mutation. Keep Chrome CDP 9444 private. Repo is public; never paste residential IPv6 or token.
+
 ## Local TLS reverse proxy HEAD proof — 2026-11-15
 
 Human observed `HTTPS_PROXY_HTTP: 405` from bounded curl HEAD to `https://<registered-dynv6-hostname>:8443/mcp`, explicitly resolved to `127.0.0.1` with `--resolve`, using `-k` solely to accept the Caddy **internal test CA**. Previous live listener inspection showed `127.0.0.1:8443 LISTEN`, and P2 local backend Host security returned valid Host HEAD 405 / forged Host 421.
 
 **LOCAL_TLS_ROUTING_SMOKE_PASS**: the test reached an HTTPS HTTP handler compatible with backend HEAD 405 through the configured local route. It does **NOT** prove tool discovery/tool call over that route, publicly trusted TLS, router/Windows IPv6 ingress, or ChatGPT Chat access. Avoid overclaiming HTTP 405 as full MCP protocol success.
 
-**NEXT**: execute one bounded MCP JSON-RPC initialize followed by `tools/call gateway_health` through the same Caddy TLS test route, with proper JSON media type and version, localhost-only `--resolve`, `--insecure` restricted to private CA testing and short connect/overall timeouts. Do not disclose user address/token. Production requires public certificate validation (never `-k`), explicit inbound 443 security approval, and separately proven ChatGPT tool invocation. Existing exposed dynv6 token rotation still not confirmed.
+**NEXT** (completed 2026-11-15): local HTTPS JSON-RPC init, ready notification and `tools/call gateway_health` each succeeded through Caddy, with HTTP 200 / 202 / 200. Production still requires public certificate validation (never `-k`), explicitly approved inbound 443 security, and separately proven ChatGPT tool invocation. Prior dynv6 token rotation not confirmed.
 
 ## Host allowlist localhost proof — 2026-11-15
 
