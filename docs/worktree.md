@@ -9,8 +9,8 @@ Last reconciled: **2026-11-14**. Repo: [`trung-via/mcp-gateway`](https://github.
 - `GATEWAY-P0-003`: **VERIFIED / PLUGIN SOURCE**. MCP Gateway Brain `v0.1.1`, release `pluginrel_6af82bff4c0081919d39246fc6407d1f`; actual cross-chat freshness behavior has not been tested.
 - `GATEWAY-P0-004`: **IN_PROGRESS / DOC**. [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2) is the ChatGPT surface connection feasibility probe.
 - `GATEWAY-P1-001`: **VERIFIED / DESIGN**. `mcp==2.3.0` and `gateway_health` contract accepted for local read-only MVP; no runtime claim.
-- `GATEWAY-P1-002`: **IN_PROGRESS / ISSUE ONLY**. [Issue #1](https://github.com/trung-via/mcp-gateway/issues/1) created for source/tests.
-- **No live MCP Gateway endpoint, production deployment, Windows adapter, GitHub adapter or exact Chat A wake has been verified.** P2 through P5 remain unimplemented unless later source/receipts prove otherwise.
+- `GATEWAY-P1-002`: **IN_PROGRESS / CODE + TEST**. [Issue #1](https://github.com/trung-via/mcp-gateway/issues/1) and [Draft PR #3](https://github.com/trung-via/mcp-gateway/pull/3) at head `a101fc5a339b72c1a4f115d270c6dff597c41db9`. Exact-head Windows CI [run #43582404606](https://github.com/trung-via/mcp-gateway/actions/runs/43582404606) **PASS**: six in-process tests and Streamable HTTP smoke. PR is not merged; source accepted only after independent review.
+- `GATEWAY-P1-003`: **IN_PROGRESS / TEST**. Windows CI PASS is verified; final PR source acceptance/merge remains pending. First CI failed on unrecognized-extra-argument acceptance, fixed at commit `a101fc5a339b72c1a4f115d270c6dff597c41db9`; no test was removed.\n- **No deployed public MCP Gateway endpoint, production deployment, Windows adapter, GitHub adapter or exact Chat A wake has been verified.** The only successful HTTP smoke observed ran on ephemeral GitHub Windows CI loopback. P2 through P5 remain unimplemented unless later source/receipts prove otherwise.
 
 ## Task / decision / evidence triad
 
@@ -74,7 +74,7 @@ authority: SOURCE_AND_TEST_ONLY
 
 1. [#1](https://github.com/trung-via/mcp-gateway/issues/1): build P1 read-only MCP prototype and produce a PR; accept only after source and tests.
 2. [#2](https://github.com/trung-via/mcp-gateway/issues/2): validate ChatGPT Chat/plugin/transport feasibility independently of P1 code.
-3. P1-003: inspect Windows CI on exact PR head; update the Work Tree only with actual CI receipts.
+3. P1-003: Windows CI has passed at `a101fc5a339b72c1a4f115d270c6dff597c41db9` — perform separate final source review and PR acceptance before any merge. Do not treat CI as ChatGPT/live integration evidence.
 4. P2: connect a working tool to ChatGPT and obtain a real invocation witness.
 5. P3/P4/P5: remain roadmap tasks; create Issues when dependencies are concrete.
 
