@@ -16,7 +16,7 @@ Reconciled: **2026-11-14**, public [`trung-via/mcp-gateway`](https://github.com/
 | `GATEWAY-P0-001` | Public repository bootstrap | **VERIFIED / CODE** | Repo `main`, baseline `90206124c1c04e754028a85a258ebcaee4b05e1c` (14 starter files) |
 | `GATEWAY-P0-002` | Architecture and read-only security boundary | **VERIFIED / DESIGN** | [ADR-0001](adr/0001-repository-and-boundaries.md), [ADR-0002](adr/0002-mcp-mvp-security-and-evidence.md), read-only test-only authorization |
 | `GATEWAY-P0-003` | Brain plugin GitHub-first continuity | **VERIFIED / CODE (plugin source)** | MCP Gateway Brain v0.1.1, release `pluginrel_6af82bff4c0081919d39246fc6407d1f`; cross-chat behavior not independently tested |
-| `GATEWAY-P0-004` | Verify actual ChatGPT Chat MCP connection path | **BLOCKED / DOC** | [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2) and [feasibility report](research/chatgpt-mcp-connection-feasibility-2026-11-14.md). Need actual account UI/connection evidence and a security-approved reachable endpoint; not a P1 blocker |
+| `GATEWAY-P0-004` | Verify actual ChatGPT Chat MCP connection path | **BLOCKED / CODE + TEST + DOC, not LIVE** | [Issue #2 remains open](https://github.com/trung-via/mcp-gateway/issues/2), [PR #4 merged](https://github.com/trung-via/mcp-gateway/pull/4), [Windows main CI PASS](https://github.com/trung-via/mcp-gateway/actions/runs/43584905472) at `bf7b649ea05429656c7345d98f58ba96c59ceb8b`; 20 tests + loopback MCP probe. [P2 connection runbook](p2-connection-runbook.md). Need **actual ChatGPT UI entitlement**, approved HTTPS/tunnel endpoint and **Chat invocation**. |
 
 ## P1 — Read-only MCP core
 
