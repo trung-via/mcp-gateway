@@ -2,7 +2,7 @@
 
 An independent, public, evidence-driven project for safely connecting ChatGPT to authorized tools across multiple projects using the Model Context Protocol (MCP).
 
-> Status: **P1 source + Windows CI verified**. A read-only `gateway_health` MCP Server exists in source, but is **not deployed publicly** and has **not been called from ChatGPT Chat**. Windows adapters, authentication for private tools and chat wake-up are future work.
+> Status: **P1 + P2 hosting source/Windows CI verified**. The read-only `gateway_health` server and independent HTTPS hosting configuration exist in code, but **no external service has been created** and **ChatGPT Chat has not yet invoked it**. Windows adapters and chat wake-up are future work.
 
 ## Goals
 
@@ -31,6 +31,14 @@ ChatGPT / other MCP client
 ## Local MCP read-only prototype
 
 Run from this repo with Python 3.11+: `python -m pip install -r requirements-dev.txt`; `python -m pytest -q tests/test_gateway_health.py`; `python -m src.gateway.server`. Then use `python tests/smoke_http.py` in another terminal. See [P1 guide](docs/development-p1.md). [PR #3](https://github.com/trung-via/mcp-gateway/pull/3) and [Windows main CI](https://github.com/trung-via/mcp-gateway/actions/runs/43583364258) provide source/test evidence only.
+
+## Optional P2 direct HTTPS hosting (normal Chat, no Tunnel or Work)
+
+A [Render Free evaluation Blueprint](render.yaml) is prepared with strict Host/Origin checks and **auto deploy disabled**. [Deploy to Render](https://render.com/deploy?repo=https://github.com/trung-via/mcp-gateway) opens Render for the **owner** to review and explicitly approve service creation. Clicking this link does not automatically deploy anything from GitHub; account confirmation is required.
+
+After Render reports a **real** HTTPS service hostname, use `https://<actual-host>/mcp` in **ChatGPT Plugins → Add custom MCP server → Server URL**. Keep **Issue #2** open until `gateway_health` is actually invoked inside an ordinary ChatGPT Chat. No laptop ports, CDP 9444, or tunneling are used.
+
+See the [P2 hosted-HTTPS runbook](docs/p2-hosted-https.md), [PR #5](https://github.com/trung-via/mcp-gateway/pull/5) and [exact-merge CI](https://github.com/trung-via/mcp-gateway/actions/runs/43587666927). The Free plan may sleep when idle and is **not** an always-on production choice.
 
 ## Security baseline
 
