@@ -2,7 +2,8 @@
 
 import asyncio
 
-from mcp import Client
+from mcp import Client, MCPError
+from mcp.types import INVALID_PARAMS
 
 
 async def main() -> None:
@@ -16,7 +17,13 @@ async def main() -> None:
             "version": "0.1.0",
             "status": "ok",
         }
-    print("PASS: streamable HTTP gateway_health")
+        try:
+            await client.call_tool("gateway_health", {"unexpected": True})
+        except MCPError as error:
+            assert error.code == INVALID_PARAMS
+        else:
+            raise AssertionError("HTTP MCP accepted forbidden input")
+    print("PASS: streamable HTTP gateway_health (positive + INVALID_PARAMS)")
 
 
 if __name__ == "__main__":
