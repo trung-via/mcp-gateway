@@ -2,7 +2,7 @@
 
 An independent, public, evidence-driven project for safely connecting ChatGPT to authorized tools across multiple projects using the Model Context Protocol (MCP).
 
-> Status: **planning / bootstrap only**. This repository does not yet provide a working MCP server, Windows agent, ChatGPT connection, or chat wake-up mechanism.
+> Status: **P1 source + Windows CI verified**. A read-only `gateway_health` MCP Server exists in source, but is **not deployed publicly** and has **not been called from ChatGPT Chat**. Windows adapters, authentication for private tools and chat wake-up are future work.
 
 ## Goals
 
@@ -14,7 +14,7 @@ An independent, public, evidence-driven project for safely connecting ChatGPT to
 
 ## Architecture
 
-See [architecture overview](docs/architecture/overview.md), [ADR-0001](docs/adr/0001-repository-and-boundaries.md), [roadmap](docs/roadmap.md), and [worktree](docs/worktree.md).
+See [architecture overview](docs/architecture/overview.md), [ADR-0001](docs/adr/0001-repository-and-boundaries.md), [roadmap](docs/roadmap.md), [worktree](docs/worktree.md), and [ChatGPT MCP connection feasibility](docs/research/chatgpt-mcp-connection-feasibility-2026-11-14.md).
 
 ```text
 ChatGPT / other MCP client
@@ -27,6 +27,10 @@ ChatGPT / other MCP client
         +-- GitHub adapter (planned)
         +-- Project adapters (planned)
 ```
+
+## Local MCP read-only prototype
+
+Run from this repo with Python 3.11+: `python -m pip install -r requirements-dev.txt`; `python -m pytest -q tests/test_gateway_health.py`; `python -m src.gateway.server`. Then use `python tests/smoke_http.py` in another terminal. See [P1 guide](docs/development-p1.md). [PR #3](https://github.com/trung-via/mcp-gateway/pull/3) and [Windows main CI](https://github.com/trung-via/mcp-gateway/actions/runs/43583364258) provide source/test evidence only.
 
 ## Security baseline
 
