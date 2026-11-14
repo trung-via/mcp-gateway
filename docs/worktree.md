@@ -37,6 +37,15 @@ not_proven:
   - Windows/GitHub adapter, write/host permissions or exact Chat A wake
 ```
 
+## User-confirmed integration constraints (2026-11-14)
+
+- **Required target:** ChatGPT ordinary Chat, not Work.
+- **Required connection mode:** **Server URL**, not Tunnel or any tunnel-like laptop forwarding.
+- **Architecture:** independent HTTPS-hosted read-only MCP endpoint -> ChatGPT custom MCP plugin via Server URL. Hosting/deployment is not yet approved or performed.
+- User has supplied a screenshot that confirms the custom MCP creation form and both connection tabs are visible. This proves UI availability only, not tool-call success.
+- Keep Windows/CDP 9444/private host services unreachable from public endpoint; future laptop agent linkage is separate P3.
+- Source of decision: [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2) user-constraint correction.
+
 ## Active task — GATEWAY-P0-004 / Issue #2
 
 ```yaml
@@ -49,15 +58,17 @@ goal: Verify how this account can connect a real MCP tool in normal ChatGPT Chat
 allowed:
   - source-led capabilities research
   - read-only eligibility / available ChatGPT connection UI assessment
-  - documented tunnel/HTTPS choices and security approval proposal
+  - independent HTTPS web-service hosting options and a bounded security approval proposal
+  - normal ChatGPT Chat only, using **Server URL**
 forbidden_without_separate_approval:
-  - deploy public endpoint or register paid hosting
+  - deploy any public endpoint or register paid hosting without a scoped approval
+  - use Tunnel, Secure MCP Tunnel, ngrok, Cloudflare Tunnel or ChatGPT Work for P2
   - expose Windows/CDP/host-admin ports or secrets
   - alter AI Commerce/CDP Host
   - mark P2 LIVE without an observed ChatGPT tool call
 acceptance:
   - exact account/surface entitlement evidence
-  - approved reachable MCP endpoint or supported private tunnel
+  - approved independently hosted HTTPS Streamable HTTP endpoint ending /mcp (no Tunnel)
   - discovered gateway_health in connected plugin
   - successful ChatGPT Chat tool call with receipt
 status: BLOCKED_LIVE_PROOF
