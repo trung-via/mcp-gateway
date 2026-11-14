@@ -1,8 +1,8 @@
 # ADR-0002: Read-only MCP MVP, authentication boundary and evidence policy
 
-Status: **PROPOSED — reviewed draft; not a production authorization**
+Status: **ACCEPTED — bounded read-only P1/P2 architecture only; no production/write authority**
 Date: 2026-11-14
-Owners: MCP Gateway Brain (architecture review); Engineering (implementation only after scoped task)
+Decision authority: Human approval to execute audit recommendations (2026-11-14); scope limited to read-only source/test work.\nOwners: MCP Gateway Brain (architecture review); Engineering (bounded implementation under issue #1)
 Supersedes: none; complements [ADR-0001](0001-repository-and-boundaries.md)
 
 ## Context and threat boundaries
@@ -34,7 +34,7 @@ Do not introduce a job queue, custom auth server, multi-agent orchestrator or br
 
 ## Tool and identity policy
 
-1. Start with one low-risk `gateway_health` tool: empty input object; deterministic structured response containing service name, version and health state only. No host paths, tokens, account data or sensitive diagnostics. Mark `readOnlyHint=true`; enforce the read-only property in code and tests.
+1. Start with one low-risk `gateway_health` tool: empty input object; deterministic structured response containing service name, version and health state only. **Explicit exception:** this non-sensitive, public health check may be anonymous; no other user-specific or project-accessing tool inherits that exception. No host paths, tokens, account data or sensitive diagnostics. Mark `readOnlyHint=true`; enforce the read-only property in code and tests.
 2. For any user-specific data or write access, require real user authentication and authorization. Preferred remote pattern: OAuth 2.1 authorization-code + PKCE; validate signature, issuer, audience/resource, expiry/not-before and scopes **for every protected tool call**. Use a trusted identity provider instead of a home-grown authorization server when practical.
 3. Resolve principal and resource ownership from validated credentials and server-side policy, not prompt text, `project_id`, `_meta` or MCP annotations. Reject cross-project/tool/resource access, including through a shared gateway.
 4. Write/execute tools do **not** belong to P1/P2. Future proposals require explicit side-effect classes, human confirmation for consequential effects, bounded parameters, server-side grants, native adapter authorization, idempotency and reconciliation of unknown outcomes.
@@ -66,7 +66,7 @@ Do not introduce a job queue, custom auth server, multi-agent orchestrator or br
 
 - Confirm the target ChatGPT account/surface supports the chosen plugin connection and tool invocation mode.
 - Select hosting mode only after testing local transport and deployment needs: remote HTTPS or a supported secure tunnel.
-- Pin compatible MCP SDK/protocol versions at implementation time; avoid hardcoding unsupported transport features.
+- P1 implementation baseline: official Python `mcp==2.3.0` (stable v2 line, researched 2026-11-14). The v2 SDK supports MCP protocol 2026-07-28 and backward-compatible 2025-era clients; tests must not assume both use `initialize`. Upgrade/pin review is separate from auto-updating a deployed endpoint.
 - Choose an identity provider and detailed resource/scope model before any user-specific or write tool.
 - Research exact-chat origin/events separately in P4; no assumption that MCP metadata can proactively post into Chat A.
 
@@ -79,4 +79,4 @@ Do not introduce a job queue, custom auth server, multi-agent orchestrator or br
 
 ## Decision gate
 
-This ADR documents a **reviewed proposal**, not production approval, tested software or a grant to any executor. P1 Engineering can implement the bounded `gateway_health` prototype in an isolated branch with tests; any expansion into personal data, write tools, host execution or proactive chat wake requires a separate explicit decision.
+This ADR is **accepted for a bounded read-only prototype** and test/PR work only. It does **not** grant production deployment, account-data access, write operations, Windows execution or proactive chat wake. Those remain separate decisions with independent identity/permission evidence. Implementation task: [Issue #1](https://github.com/trung-via/mcp-gateway/issues/1); ChatGPT connection feasibility: [Issue #2](https://github.com/trung-via/mcp-gateway/issues/2).
