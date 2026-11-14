@@ -11,6 +11,14 @@
 - Unverified: public TLS trust, actual off-LAN IPv6 ingress, NAT/router IPv6 filtering, ChatGPT remote IPv6-only connectivity, plugin registration, and native ChatGPT Chat MCP call.
 - A dynv6 credential appeared in a prior screenshot. Rotation/revocation has **not** been confirmed. Do not place new credentials, personal IPv6, user hostname, certificate keys or outputs containing them into this PUBLIC repo.
 
+## Laptop DNS provider module check — 2026-11-15
+
+Human ran `caddy list-modules | Select-String "dns.providers.dynv6"` on Windows PowerShell and observed **no matching output**. Interpret as **CADDY_DYNV6_MODULE_ABSENT / USER_OBSERVED** in the currently selected Caddy executable (not evidence of a broken gateway).
+
+**Decision for now:** Do **not** replace the working Caddy executable, install an unaudited custom binary, handle any dynv6 secrets, or attempt automatic DNS-01 issuance. Continue with the existing stock Caddy and first finish dry-run syntax/network checks; a later independently approved IPv6 443 probe will determine whether the ingress path can work at all. DNS-01 is an optional later step if ingress is viable and it is worth the third-party module+token overhead. A publicly trusted DNS-01 certificate alone cannot bypass upstream IPv6 firewall filtering.
+
+If custom DNS-01 becomes required, review the Caddy community module `github.com/caddy-dns/dynv6`, source dependencies, build/upgrade strategy, and freshly rotated token. Do not remove or replace the tested `127.0.0.1:8443` internal TLS setup during dry-run. No router login requirement and no external listener/firewall changes.
+
 ## Two independent gates
 
 **TLS gate** — A publicly trusted HTTPS certificate can be obtained either through:
