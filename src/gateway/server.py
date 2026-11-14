@@ -5,9 +5,11 @@ This starts a loopback Streamable HTTP MCP endpoint at /mcp.
 """
 
 from typing import Literal
+from collections.abc import Mapping
 
+from mcp import MCPError
 from mcp.server import MCPServer
-from mcp.types import ToolAnnotations
+from mcp.types import INVALID_PARAMS, ToolAnnotations
 from pydantic import BaseModel, ConfigDict
 
 SERVICE_VERSION = "0.1.0"
@@ -23,7 +25,26 @@ class HealthResponse(BaseModel):
     status: Literal["ok"]
 
 
-mcp = MCPServer("mcp-gateway")
+async def deny_unknown_health_arguments(ctx, call_next):
+    """Validate raw MCP tool args before the SDK drops unknown fields.
+
+    SDK v2.3.0 function argument models ignore unknown keys by default.
+    This bounded middleware enforces the gateway_health zero-parameter contract.
+    """
+    if ctx.method == "tools/call":
+        params = ctx.params
+        if isinstance(params, Mapping):
+            name = params.get("name")
+            args = params.get("arguments", {})
+        else:
+            name = getattr(params, "name", None)
+            args = getattr(params, "arguments", {})
+        if name == "gateway_health" and args != {}:
+            raise MCPError(INVALID_PARAMS, "gateway_health takes no arguments")
+    return await call_next(ctx)
+
+
+mcp = MCPServer("mcp-gateway", middleware=[deny_unknown_health_arguments])
 
 
 @mcp.tool(
