@@ -5,12 +5,14 @@ on:
     paths:
       - 'scripts/hostops/**'
       - 'tests/hostops/**'
+      - 'templates/private-hostops/**'
       - '.github/workflows/p2-hostops-*.yml'
   push:
     branches: [main]
     paths:
       - 'scripts/hostops/**'
       - 'tests/hostops/**'
+      - 'templates/private-hostops/**'
       - '.github/workflows/p2-hostops-*.yml'
 
 permissions:
@@ -27,6 +29,11 @@ jobs:
         run: |
           pwsh -NoProfile -File tests/hostops/test-p2-provider-controls.ps1
           if ($LASTEXITCODE -ne 0) { throw 'OFFLINE_HOSTOPS_CONTRACT_FAILED' }
+      - name: Check inert private HostOps template and immutable source pin
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tests/hostops/test-private-hostops-template.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'PRIVATE_HOSTOPS_TEMPLATE_POLICY_FAILED' }
       - name: Deny direct public-repository HostOps native triggers
         shell: pwsh
         run: |
