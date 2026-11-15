@@ -67,6 +67,22 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Three-resolver AAAA matches laptop — 2026-11-15
+
+**USER_LIVE read-only DNS test (Windows laptop, no hostname/IP published):**
+```text
+LOCAL_GLOBAL_IPV6_COUNT=1
+1.1.1.1 AAAA_COUNT=1 MATCH_LOCAL=True
+8.8.8.8 AAAA_COUNT=1 MATCH_LOCAL=True
+9.9.9.9 AAAA_COUNT=1 MATCH_LOCAL=True
+```
+
+Current selected global Wi-Fi IPv6 equals the unique public AAAA returned by Cloudflare, Google and Quad9 resolvers. **DNS_AAAA_3_RESOLVERS_MATCH_LOCAL / USER_LIVE PASS**, but this does not establish authoritative/CA-perspective DNS state **during expired third CA trial**.
+
+**Remaining diagnostic**: CA's `Unable to contact <HOST> at <IPV6>` is a separate runtime ingress issue, despite an earlier off-LAN TCPData TCP443 `OPEN` in another trial. The next falsifiable experiment would be a **bounded, static-only, no-CA** IPv6 TCP443 ingress test from *at least two independent IPv6-capable external networks* during **the same window**, recording exact listener/firewall-ready timing and comparing basic TCP with (if possible) TLS SNI/ALPN outcomes. It requires new explicit scope approval to temporarily open a public IPv6 listener and Windows Private ActiveStore firewall; no license to retry ACME, deploy public MCP/CDP, change router, or reveal secrets. If this passes from multiple networks but CA still cannot contact, prioritize CA-specific reachability/path behavior and validation protocol, without asserting causality until live proof.
+
+Official references: https://letsencrypt.org/docs/ipv6-support/ ; https://caddyserver.com/docs/automatic-https . Current P0-004 remains BLOCKED; trusted HTTPS and ChatGPT native MCP invocation still UNVERIFIED.
+
 ## Third ACME trial: CA IPv6 endpoint unreachable (authorization failed) — 2026-11-15
 
 **New direct CA authorization failure detail, USER_LIVE:** newest third-trial Caddy stderr `tls.obtain` reported `authorization failed: HTTP 400 urn:ietf:params:acme:error:malformed - Unable to contact "<HOST>" at "<IPV6>", no IPv4 addresses to try as fallback`. Three `CHALLENGE_STARTED` events and non-empty `OTHER_ACME_ERROR` were observed prior to extracting literal error. This is the *ACME server response status* to a **TLS-ALPN-01 TCP443** validation attempt, not evidence that the HTTP-01 challenge was used. Public HTTPS certificate **NOT verified**.
