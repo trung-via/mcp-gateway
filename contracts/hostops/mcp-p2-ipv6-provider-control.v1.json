@@ -1,0 +1,66 @@
+{
+  "schema": "mcp-gateway.hostops-registered-operation.v1",
+  "operation": "MCP_P2_IPV6_PROVIDER_CONTROL_READONLY_V1",
+  "status": "SOURCE_ONLY_NOT_REGISTERED",
+  "parameters": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "handler": "scripts/hostops/p2-ipv6-provider-controls-readonly.ps1",
+  "execution_transport": "SEPARATELY_AUTHORIZED_PRIVATE_HOSTOPS",
+  "execution_identity": "OWNER_AUTHENTICATED_SOURCE_REGISTERED_OPERATION",
+  "side_effect_class": "NETWORK_READONLY_PUBLIC_POSITIVE_CONTROL",
+  "target_host": "ipv6.google.com",
+  "target_port": 443,
+  "allowed_provider_api_origins": [
+    "https://tcpdata.com",
+    "https://check-host.net"
+  ],
+  "bounds": {
+    "tcpdata_timeout_seconds": 12,
+    "checkhost_start_timeout_seconds": 8,
+    "checkhost_polls_max": 6,
+    "checkhost_poll_timeout_seconds": 5,
+    "checkhost_nodes_max": 8
+  },
+  "forbidden": [
+    "ARBITRARY_POWERSHELL",
+    "DYNAMIC_URL_INPUT",
+    "WINDOWS_FIREWALL",
+    "LISTEN_PORT",
+    "ROUTER_ACCESS",
+    "CADDY_ACME",
+    "DNS_MUTATION",
+    "LOCAL_HOST_INVENTORY",
+    "MCP_CDP_ACCESS"
+  ],
+  "receipt": {
+    "prefix": "MCP_P2_HOSTOPS_RECEIPT_V1=",
+    "public_fields": [
+      "schema",
+      "operation",
+      "utc",
+      "status",
+      "tcpdata_status",
+      "tcpdata_error",
+      "checkhost_status",
+      "checkhost_error",
+      "checkhost_selected_nodes",
+      "checkhost_ipv6_nodes",
+      "checkhost_ipv4_nodes",
+      "checkhost_error_nodes",
+      "checkhost_pending_nodes",
+      "checkhost_schema_nodes",
+      "checkhost_distinct_asns"
+    ]
+  },
+  "gates_before_native": [
+    "PRIVATE_HOSTOPS_TRANSPORT_APPROVED",
+    "EXACT_OPERATION_REGISTERED",
+    "NATIVE_RUNNER_IDENTITY_VERIFIED",
+    "OWNER_TRIGGER_AUTHENTICATED",
+    "NO_PUBLIC_REPO_SELF_HOSTED_RUNNER"
+  ],
+  "native_run_status": "BLOCKED_NO_REGISTERED_PRIVATE_HOSTOPS"
+}
