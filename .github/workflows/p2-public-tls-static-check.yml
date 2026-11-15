@@ -36,10 +36,10 @@ jobs:
           $must = @(
             '#Requires -RunAsAdministrator',
             '[switch] $ApprovePublicACME',
-            'if (-not $ApprovePublicACME)',
+            'if (-not $CheckBindOnly -and -not $ApprovePublicACME)',
             'issuer acme',
             'disable_http_challenge',
-            'bind tcp6/[$ipv6]',
+            'bind [$ipv6]',
             'skip_install_trust',
             'admin off',
             'New-NetFirewallRule -PolicyStore ActiveStore',
@@ -47,6 +47,10 @@ jobs:
             '-Program $caddyPath',
             '-LocalAddress $ipv6',
             '-LocalPort 443',
+            '[switch] $CheckBindOnly',
+            'CADDY_BIND_IPV6_HOST_ONLY=PASS',
+            'PUBLIC_ACME_CA_CONTACT=NO',
+            'NO_FIREWALL_CHANGE=YES',
             'PUBLIC_TLS_TRUST=PASS_VALIDATED_WITHOUT_INSECURE',
             'Remove-NetFirewallRule -PolicyStore ActiveStore',
             'Stop-Process -Id $process.Id',
@@ -57,6 +61,14 @@ jobs:
           }
           if ($code -match '(?m)^\s*(tls internal|reverse_proxy|exec|import|handle_path)\b') {
             throw 'FORBIDDEN_STATIC_ONLY_DIRECTIVE'
+          }
+          # Regression: tls-alpn's embedded listener cannot use network/host as a bind host.
+          if ($code -match '(?m)^\s*bind\s+(tcp6/|tcp4/|tcp/|0\.0\.0\.0|\[::\])') {
+            throw 'ACME_TLS_ALPN_BIND_HOST_PREFIX_REGRESSION'
+          }
+          if ($code.IndexOf('if ($CheckBindOnly)') -lt 0 -or
+              $code.IndexOf('if ($CheckBindOnly)') -ge $code.IndexOf('$process = Start-Process')) {
+            throw 'READONLY_PREFLIGHT_MUST_EXIT_BEFORE_STARTING_CADDY'
           }
           if (-not $watch.Contains('ExpectedConfigPath') -or -not $watch.Contains('Remove-NetFirewallRule')) {
             throw 'WATCHDOG_CLEANUP_MISSING'
