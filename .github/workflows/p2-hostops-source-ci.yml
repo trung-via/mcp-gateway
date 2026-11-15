@@ -27,22 +27,16 @@ jobs:
         run: |
           pwsh -NoProfile -File tests/hostops/test-p2-provider-controls.ps1
           if ($LASTEXITCODE -ne 0) { throw 'OFFLINE_HOSTOPS_CONTRACT_FAILED' }
-      - name: Assert workflow cannot run arbitrary public issue commands
+      - name: Deny direct public-repository HostOps native triggers
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $workflow = Get-Content -LiteralPath '.github/workflows/p2-hostops-provider-controls-readonly.yml' -Raw
-          foreach ($expected in @(
-            "github.actor == 'trung-via'",
-            'github.event.issue.number == 9',
-            "github.event.comment.body == '/mcp-gateway-hostops-p2-readonly-v1'",
-            'runs-on: [self-hosted, Windows, mcp-gateway-hostops]',
-            'ref: main',
-            'persist-credentials: false'
-          )) {
-            if (-not $workflow.Contains($expected)) { throw 'MISSING_FIXED_HOSTOPS_GUARD' }
+          $workflows = @(Get-ChildItem -Path '.github/workflows' -File -Filter '*.yml')
+          foreach ($path in $workflows) {
+            $workflow = Get-Content -LiteralPath $path.FullName -Raw
+            if ($workflow -match '(?im)^\s*runs-on:\s*(?:\[?\s*self-hosted\b)' -or
+                $workflow -match '(?im)^\s*issue_comment:\s*$') {
+              throw 'PUBLIC_REPO_HOSTOPS_NATIVE_TRIGGER_FORBIDDEN'
+            }
           }
-          if ($workflow -match '(?m)^\s+pull_request:' -or $workflow -match '(?m)^\s+workflow_dispatch:') {
-            throw 'UNAUTHORIZED_NATIVE_TRIGGER'
-          }
-          'P2_HOSTOPS_WORKFLOW_STATIC_GUARD=PASS'
+          'P2_HOSTOPS_PUBLIC_REPO_RUNNER_DENY=PASS'
