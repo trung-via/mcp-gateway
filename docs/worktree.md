@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## P2 trial #2 independent TCPData IPv6 checker code ready — 2026-11-15
+
+**Reason:** first external mobile phone test was INVALID_REMOTE_PROBE_CLIENT_NO_IPV6 (human screenshot: mobile IPv6 unavailable, 0/10); no evidence yet that upstream router passes or blocks inbound IPv6. User approved continuing with a third-party IPv6-aware TCP checker knowing it may receive/store the residential destination IPv6/hostname.
+
+**GitHub CODE update (not laptop execution):** updated existing [PR #7](https://github.com/trung-via/mcp-gateway/pull/7) PowerShell script to add explicit `-UseTcpDataIPv6Probe`. Before opening any listener/firewall, a remote checker positive control to `ipv6.google.com:443` must return OPEN; if it fails, STOP with no Windows mutation. During the previously approved isolated static-only HTTPS TCP443 test window, curl self-checks exact host global IPv6 via test-only `--insecure`; if local static response does not match, cleanup occurs before remote scan. If it matches, TCPData receives the laptop's literal IPv6 for external check and only status is printed (OPEN/CLOSED/TIMEOUT/INCONCLUSIVE_PROVIDER_ERROR), never the raw IP. The existing ActiveStore scoped firewall rule, 180s window, isolated Caddy and expiry watchdog remain unchanged. No MCP/backend, CDP, router or DNS changes.
+
+[Windows CI run 43659758085](https://github.com/trung-via/mcp-gateway/actions/runs/43659758085) **PASS** for PowerShell parse and static safety checks at updated PR head `9753377a81777f719f48c5df50f03b3d378f4fc5`; **NOT A LIVE provider/Windows network test**. TCPData [docs](https://tcpdata.com/docs/port-check) say accepts IPv6 literals but uses HTTPS for port443, so non-open outcomes can be **ambiguous due untrusted internal CA**. No proof of upstream router blocking is permitted from such result alone.
+
+**Next:** elevated Windows PowerShell fetch updated branch into temporary local script paths; rerun with `-UseTcpDataIPv6Probe` once, read positive control/local HTTP/external status and cleanup receipts; abort before exposure on third-party control failure. Prior windows trial cleanly rolled back, current port 443 closed. Public TLS/ChatGPT native MCP still unverified; no router login, Tunnel/Render/Work.
+
 ## Mobile IPv6 source failure diagnosed — 2026-11-15
 
 Human screenshot of **test-ipv6.com via the mobile-data test connection** showed **no client IPv6 address detected**, **IPv6-only sites time out**, and **IPv6 readiness 0/10**. Ordinary IPv4 connectivity works; resolver IPv6 availability does not prove the phone has usable IPv6. Never copy the displayed public phone IPv4 into this public repo.
