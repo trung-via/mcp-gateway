@@ -27,6 +27,20 @@ Expected: `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `PUBLIC_ACME_CA_CONTACT=NO`, `NO_FIR
 
 **STOP**: do not immediately re-run ACME; review the new local preflight and latest CI result first. A new CA issuance attempt is a **separate retry** with potential rate limiting/CT effects and must be scoped explicitly; earlier approval of a single time-boxed attempt does not silently become authorization for unlimited attempts.
 
+## Second ACME attempt: double-bracket bind-host root cause and repaired preflight — 2026-11-15
+
+**USER_LIVE operator report** after fixed `bind [$ipv6]` script in PR #8: `CADDY_BIND_IPV6_HOST_ONLY=PASS`, Caddy 443 BOUND, firewall ACTIVE, no public MCP, but `PUBLIC_TLS_TRUST=NOT_VERIFIED_WITHIN_WINDOW`. Read-only Caddy stderr showed `tls.obtain` `presenting with embedded solver` failed `missing port in address` with malformed address starting **`[[IPv6]]`**. Multiple production/staging challenge attempts hit the *same local malformed bind-host*. The script did remove firewall and stop the isolated Caddy, and owner independent postcheck confirmed `PORT443_LISTENERS=0`, `ACME_TEST_RULES=0`. Neither CA validation nor a trusted certificate succeeded.
+
+**Upstream evidence directly matches this specific bug:** [caddyserver/caddy#7399](https://github.com/caddyserver/caddy/issues/7399) comment dated 2025-12-27 reports ACME IPv6 `bind` addresses **must not include square brackets**, because Caddy's ACME address construction adds them again, causing missing-port errors. Official [Caddy bind docs](https://caddyserver.com/docs/caddyfile/directives/bind) show bracketed IPv6 for normal listeners, so this represents a **runtime ACME exception/bug** in the observed binary, not generic Caddyfile syntax error. Certmagic TLS-ALPN-01 uses `challenges.bind_host` as a raw host input; adapted HTTP `listen: ["[IPv6]:443"]` alone is **not an adequate preflight**.
+
+**Current corrected PR #8 source (NOT YET tested on laptop):**
+- Use `bind $ipv6` **without brackets or `tcp6/` prefix** in the Caddyfile. Preserve exact Wi-Fi global IPv6 and port443; Windows temporary firewall rule remains restricted to exact IPv6/Caddy binary.
+- Strengthen `-CheckBindOnly`: inspect BOTH adapted HTTP server listener for exact `[IPv6]:443` and ACME `apps.tls.automation.policies[*].issuers[*].challenges.bind_host` which **must equal raw unbracketed selected IPv6**; otherwise hard STOP before any Caddy start, external CA contact or firewall mutation.
+- Add regression CI: forbid bracketed/network-prefixed bind inputs, require raw `bind $ipv6` and separate `CADDY_ACME_BIND_HOST_RAW_IPV6=PASS` guard before exiting no-CA preview.
+- **NO THIRD PUBLIC CA ATTEMPT** is authorized. First run `-CheckBindOnly` with a freshly pinned, reviewed PR head (no `-ApprovePublicACME`); the preview exits before any listener/firewall/CA effect. If it does not PASS, keep stop and audit adapted JSON locally (redact IP and hostname). If it does PASS, it remains **not** full ACME runtime proof; obtain new limited approval before any CA retry, consider staging-first to minimize production CA limits.
+
+Ignore harmless Caddyfile formatting warning or `admin endpoint disabled` warning; they did not cause `listen tcp ... missing port`. **No router login, no Tunnel/Render/Work, no dynv6 module/token, no port80, no MCP/CDP exposure.**
+
 ## Scope and risk consent
 
 Only after explicit operator approval for PUBLIC CA ISSUANCE, invoke scripts/p2-public-tls443-static-probe.ps1 with -ApprovePublicACME in an elevated PowerShell 7 session on the Windows laptop. The switch is fail-closed if omitted.
