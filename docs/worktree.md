@@ -67,6 +67,14 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Mobile IPv6 source failure diagnosed — 2026-11-15
+
+Human screenshot of **test-ipv6.com via the mobile-data test connection** showed **no client IPv6 address detected**, **IPv6-only sites time out**, and **IPv6 readiness 0/10**. Ordinary IPv4 connectivity works; resolver IPv6 availability does not prove the phone has usable IPv6. Never copy the displayed public phone IPv4 into this public repo.
+
+**Reclassification:** mobile browser `ERR_CONNECTION_TIMED_OUT` for the IPv6-only dynv6 URL occurred with a demonstrated **CLIENT_WITHOUT_IPV6**. The 180-second external trial #1 is **INVALID_REMOTE_PROBE_CLIENT_NO_IPV6**, **not** evidence of home router/ISP IPv6 filtering. Windows limited test Caddy bind/rule/cleanup receipts remain PASS, postcheck 0 listener + 0 rule. **Direct IPv6 inbound from a properly capable remote peer remains UNVERIFIED**.
+
+**Next minimal independent validation:** use only a remote source known to have IPv6, e.g. a trusted remote machine or a third-party IPv6-supported TCP443 checker (public documentation example: https://tcpdata.com/docs/port-check). A public web checker may learn the target hostname/residential IPv6: secure the operator's consent and do not publish its results verbatim in public GitHub. If/when a repeat probe is approved, keep its isolated static HTTPS/443, time limit and rollback; no public MCP, CDP, router login, Tunnel/Render/Work. Trusted TLS and ChatGPT normal Chat remain separate gates. Existing phone cannot be used for this direct IPv6 verification until its mobile IPv6 capability changes.
+
 ## Ingress trial #1 mobile timeout diagnostic — 2026-11-15
 
 Owner reported the actual phone browser error **`ERR_CONNECTION_TIMED_OUT`** for the previous static HTTPS IPv6 TCP443 test. This is **not** a certificate-authority error and supplies no evidence that TLS handshake succeeded. **REMOTE_IPV6_443=FAILED_TO_CONNECT / ROOT_CAUSE_UNKNOWN**. Earlier Windows test process started, bound global IPv6 TCP443 and installed scoped rule, then expired and cleaned up with postcheck 0 listeners / 0 rules.
