@@ -67,6 +67,14 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Public ACME trial #2 attempted; public trust unverified — 2026-11-15
+
+**Actual operator Windows 300-second test after Caddy host-only bind fix:** `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `TEMP_IPV6_443_LISTENER=BOUND`, `FIREWALL_TEST_RULE=SCOPED_ACTIVE`, `TLS_CERTIFICATE=PUBLIC_ACME_PENDING`, `MCP_BACKEND_EXPOSED=NO`, `WINDOW_SECONDS=300`, `ACME_CHALLENGE=TLS_ALPN_01_TCP443_ONLY`, but `PUBLIC_TLS_TRUST=NOT_VERIFIED_WITHIN_WINDOW`. Window ended normally; `FIREWALL_TEST_RULE=REMOVED`, `TEMP_CADDY=STOPPED`. Additional independent postcheck 0/0 not yet provided for this specific trial.
+
+**Correct classification:** `PUBLIC_TLS_TRUST=UNVERIFIED`, **CA issuance state unknown**. The source suppresses local curl error output, so the failure may be CA validation/challenge or client-side certificate/HTTP validation. Do not assume original `missing port in address` recurred without the latest Caddy process stderr. Previous direct IPv6 TCP443 inbound OPEN remains separate evidence.
+
+**Authorization:** this consumed the single agreed additional ACME trial; **NO THIRD RETRY** pending diagnosis and new scoped permission. Read-only next step: safely extract relevant JSON fields from newest `%TEMP%\mcp-p2-443-*\caddy-stderr.log`, sanitizing private hostname, IPv6, ACME account/order URLs/paths; independent port443 listener and exact scoped rule count. No CA calls, router changes, DNS plugin, public MCP or CDP.
+
 ## Approved single public ACME TLS-ALPN-01 retry #2 — awaiting operator Windows live proof
 
 **OWNER AUTHORIZATION / 2026-11-15:** after native Caddy `-CheckBindOnly` no-CA/no-firewall PASS, user explicitly approved **exactly ONE further 300-second** public CA ACME TLS-ALPN-01 test, with consent to previously disclosed CT transparency/persistent Caddy certificate material. This is not open-ended retry permission. No Windows run was performed by ChatGPT tools; the next action requires operator's elevated PowerShell 7 on laptop.
