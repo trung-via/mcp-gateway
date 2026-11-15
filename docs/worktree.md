@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Ingress trial #1 mobile timeout diagnostic — 2026-11-15
+
+Owner reported the actual phone browser error **`ERR_CONNECTION_TIMED_OUT`** for the previous static HTTPS IPv6 TCP443 test. This is **not** a certificate-authority error and supplies no evidence that TLS handshake succeeded. **REMOTE_IPV6_443=FAILED_TO_CONNECT / ROOT_CAUSE_UNKNOWN**. Earlier Windows test process started, bound global IPv6 TCP443 and installed scoped rule, then expired and cleaned up with postcheck 0 listeners / 0 rules.
+
+Two missing qualifiers before assigning blame:
+1. Phone mobile-data IPv6 capability (Wi-Fi OFF; `https://test-ipv6.com/` gives IPv6 connectivity summary; do NOT collect phone/home IP values).
+2. Did browser attempt occur during live 180-second window when `FIREWALL_TEST_RULE=SCOPED_ACTIVE` or after `TEST_WINDOW=EXPIRED`?
+
+If either is unconfirmed, this test cannot isolate router/ISP blocking. If both PASS, investigate Windows host-side IPv6 listener/response path and an independent off-LAN packet witness in a **separately controlled, explicitly scoped** test. Caddy logs alone may not log dropped TCP SYN. No router login, no new firewall opening, no Tunnel/Render/Work; public trusted HTTPS and ChatGPT tool-call remain UNVERIFIED.
+
 ## IPv6 TCP443 ingress trial #1 — operator Windows witness 2026-11-15
 
 **USER_LIVE actual laptop test via PR #7**: isolated static-only Caddy on selected global IPv6 TCP443 started with `TEMP_IPV6_443_LISTENER=BOUND`, narrow ActiveStore firewall rule `SCOPED_ACTIVE`, internal/test-only certificate, and `MCP_BACKEND_EXPOSED=NO`. Window was 180 seconds. Main process and independent watchdog design supplied; observed normal termination `TEST_WINDOW=EXPIRED`, `FIREWALL_TEST_RULE=REMOVED`, `TEMP_CADDY=STOPPED`. Final read-only PowerShell counts: **443 listeners=0 and temporary firewall rules=0**. **LOCAL_START_CLEANUP_PASS**.
