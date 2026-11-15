@@ -26,6 +26,9 @@ param(
 
     [switch] $ApprovePublicACME,
 
+    # Safe preview: adapt Caddyfile, verify exact listener and exit BEFORE any CA call.
+    [switch] $CheckBindOnly,
+
     [string] $InterfaceAlias = "Wi-Fi"
 )
 
@@ -39,7 +42,7 @@ $firewallCreated = $false
 $ruleName = "MCP-P2-IPv6-443-Temp-" + [guid]::NewGuid().ToString('N')
 
 $cleanupPath = Join-Path $PSScriptRoot 'p2-tls443-cleanup-watchdog.ps1'
-if (-not $ApprovePublicACME) { throw 'STOP: public CA issuance needs explicit -ApprovePublicACME; no effect.' }
+if (-not $CheckBindOnly -and -not $ApprovePublicACME) { throw 'STOP: public CA issuance needs explicit -ApprovePublicACME; no effect.' }
 if (-not (Test-Path -LiteralPath $cleanupPath -PathType Leaf)) {
     throw 'STOP: companion expiry-watchdog script is missing; nothing opened.'
 }
@@ -97,7 +100,9 @@ $config = @"
 }
 
 https://$Hostname {
-    bind tcp6/[$ipv6]
+    # Important: use HOST-only bind. Supplying tcp6/ here causes Caddy's
+    # TLS-ALPN embedded solver to build a malformed listener address.
+    bind [$ipv6]
     tls {
         issuer acme {
             disable_http_challenge
@@ -110,8 +115,25 @@ https://$Hostname {
 [System.IO.File]::WriteAllText($configPath, $config, [System.Text.UTF8Encoding]::new($false))
 
 try {
-    & $caddyPath adapt --config $configPath --adapter caddyfile *> $null
-    if ($LASTEXITCODE -ne 0) { throw 'STOP: Caddy config adaptation failed.' }
+    # Caddyfile adaptation is read-only. A syntactically valid config is not
+    # proof that ACME challenges will succeed; enforce exact bind shape here.
+    $adaptLines = @(& $caddyPath adapt --config $configPath --adapter caddyfile 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $adaptLines.Count -eq 0) { throw 'STOP: Caddy config adaptation failed.' }
+    $adapted = ($adaptLines -join "`n") | ConvertFrom-Json -ErrorAction Stop
+    $listeners = @(
+        $adapted.apps.http.servers.PSObject.Properties |
+            ForEach-Object { $_.Value.listen } | Where-Object { $_ }
+    )
+    $expected = "[$ipv6]:443"
+    if ($listeners.Count -ne 1 -or [string]$listeners[0] -notin @($expected, "tcp/$expected")) {
+        throw 'STOP: Caddy adapted listener is not exactly the selected IPv6 TCP443 host; no effects.'
+    }
+    Write-Output 'CADDY_BIND_IPV6_HOST_ONLY=PASS'
+    if ($CheckBindOnly) {
+        Write-Output 'PUBLIC_ACME_CA_CONTACT=NO'
+        Write-Output 'NO_FIREWALL_CHANGE=YES'
+        return
+    }
     if (@(Get-NetFirewallRule -PolicyStore ActiveStore -Name $ruleName -ErrorAction SilentlyContinue).Count -ne 0) {
         throw 'STOP: generated firewall rule name already exists.'
     }
