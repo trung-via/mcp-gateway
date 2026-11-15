@@ -20,13 +20,20 @@ param(
     [ValidatePattern('^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$')]
     [string] $Hostname,
 
-    [ValidateRange(60,240)]
+    [ValidateRange(60,180)]
     [int] $DurationSeconds = 180,
 
     [string] $InterfaceAlias = "Wi-Fi",
 
     # Explicit opt-in; third-party checker sees the laptop IPv6 during the test.
-    [switch] $UseTcpDataIPv6Probe
+    [switch] $UseTcpDataIPv6Probe,
+
+    # Explicit second independent provider and multi-node probes.
+    [switch] $UseMultiSourceIPv6Probe,
+
+    # Consent to opening ingress and sharing public IPv6 with remote checkers.
+    [switch] $ApproveTemporaryIngress,
+    [switch] $ApproveRemoteProbeDisclosure
 )
 
 Set-StrictMode -Version Latest
@@ -39,6 +46,9 @@ $firewallCreated = $false
 $ruleName = "MCP-P2-IPv6-443-Temp-" + [guid]::NewGuid().ToString('N')
 
 $cleanupPath = Join-Path $PSScriptRoot 'p2-ipv6-443-cleanup-watchdog.ps1'
+if (-not $ApproveTemporaryIngress) { throw 'STOP: explicit -ApproveTemporaryIngress required.' }
+if ($UseMultiSourceIPv6Probe -and $UseTcpDataIPv6Probe) { throw 'STOP: choose one remote mode.' }
+if ($UseMultiSourceIPv6Probe -and -not $ApproveRemoteProbeDisclosure) { throw 'STOP: explicit -ApproveRemoteProbeDisclosure required.' }
 if (-not (Test-Path -LiteralPath $cleanupPath -PathType Leaf)) {
     throw 'STOP: companion expiry-watchdog script is missing; nothing opened.'
 }
@@ -162,7 +172,7 @@ try {
         '-CaddyPid', [string]$process.Id,
         '-ExpectedExe', ('"{0}"' -f $caddyPath),
         '-ExpectedConfigPath', ('"{0}"' -f $configPath),
-        '-DelaySeconds', [string]($DurationSeconds + 30)
+        '-DelaySeconds', [string]$DurationSeconds
     )
     $guard = Start-Process -FilePath $pwsh.Source -ArgumentList $watchdogArgs -WindowStyle Hidden -PassThru
     if ($guard.HasExited) {
@@ -172,6 +182,10 @@ try {
     # ActiveStore avoids persistent rule across reboot. Exact IPv6 and Caddy only.
     $null = New-NetFirewallRule -PolicyStore ActiveStore -Name $ruleName -DisplayName 'MCP P2 TEMP IPv6 TCP 443 reachability probe' -Enabled True -Direction Inbound -Action Allow -Profile Private -Program $caddyPath -Protocol TCP -LocalPort 443 -LocalAddress $ipv6 -RemoteAddress Any
     $firewallCreated = $true
+    $openedAtUtc = (Get-Date).ToUniversalTime()
+    $deadline = (Get-Date).AddSeconds($DurationSeconds - 15)
+    Write-Output ('FIREWALL_READY_UTC=' + $openedAtUtc.ToString('o'))
+    Write-Output "MAX_FIREWALL_WINDOW_SECONDS=$DurationSeconds"
 
     # Independent local-IPv6 HTTPS check on the test-only static endpoint.
     # -k is strictly for this temporary internal CA; never for public MCP.
@@ -203,13 +217,14 @@ try {
     Write-Output 'MCP_BACKEND_EXPOSED=NO'
     Write-Output 'TLS_CERTIFICATE=INTERNAL_TEST_ONLY'
     Write-Output "PROBE_URL=https://$Hostname$probePath"
-    Write-Output "WINDOW_SECONDS=$DurationSeconds"
+    Write-Output "WINDOW_SECONDS_MAX=$DurationSeconds"
+    Write-Output "WINDOW_SECONDS_NORMAL=$($DurationSeconds - 15)"
     Write-Output 'TEST_FROM=PHONE_MOBILE_DATA_WITH_WIFI_OFF; external IPv6 required'
     Write-Output 'BROWSER_CERTIFICATE_WARNING=EXPECTED; not production-safe'
     Write-Output 'CLEANUP=Automatic at end; independent expiry failsafe armed'
     Write-Output 'EMERGENCY: Ctrl+C triggers cleanup; if needed, reboot resets ActiveStore rule'
 
-    $deadline = (Get-Date).AddSeconds($DurationSeconds)
+    # Main cleanup at least 15s before watchdog hard ceiling.
     while ((Get-Date) -lt $deadline) {
         if ($process.HasExited) { throw 'STOP: test Caddy process exited early.' }
         Start-Sleep -Seconds 2
