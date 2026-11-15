@@ -67,6 +67,20 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Windows no-CA bind preflight of repaired PR #8 PASS — 2026-11-15
+
+**USER_LIVE operator Windows PowerShell output** after fetching PR #8 reviewed branch head `382e7882ffd3a72c8f2954c204c7312c6985e624` and invoking `p2-public-tls443-static-probe.ps1 -CheckBindOnly`:
+
+```text
+CADDY_BIND_IPV6_HOST_ONLY=PASS
+PUBLIC_ACME_CA_CONTACT=NO
+NO_FIREWALL_CHANGE=YES
+```
+
+**EVIDENCE:** `WINDOWS_NO_CA_BIND_PREFLIGHT_PASS / LIVE`. The Caddyfile now has host-only `bind [$ipv6]`; script parsed adapted JSON and confirmed the selected global IPv6/443 listener address (no `tcp6/` prefix), then returned before `Start-Process`, `New-NetFirewallRule`, ACME issuance or public CA contact. [PR #8 Windows PowerShell AST/static CI #43664753050](https://github.com/trung-via/mcp-gateway/actions/runs/43664753050) and [MCP protocol CI #43664753051](https://github.com/trung-via/mcp-gateway/actions/runs/43664753051) both SUCCESS at reviewed head.
+
+**Remaining boundary:** Caddy's *runtime embedded TLS-ALPN-01 solver* was not invoked during this dry-run. **Trusted public HTTPS certificate remains UNVERIFIED.** Before one further 300-second static-only CA trial, obtain explicit separately scoped operator consent to recontact a public CA with potential CT log/certificate persistence effects; do not infer unlimited retry authorization from previous consent. Keep prior exact IPv6 TCP443/ActiveStore Private firewall/isolated Caddy + watchdog restrictions and no MCP/CDP/host access. No router login, DNS token, port80, Tunnel/Render/Work. On any retry failure, read redacted Caddy stderr first.
+
 ## ACME TLS-ALPN bind-host root cause confirmed and PR #8 repaired — 2026-11-15
 
 **Native laptop diagnosis (USER_LIVE log):** ACME production/staging accounts were registered; `http.acme_client` started TLS-ALPN-01 challenge, but `tls.obtain` failed at `presenting with embedded solver` because it attempted a **malformed TCP listen address missing a port**, derived from original `bind tcp6/[$ipv6]`. The site server did bind IPv6/443, but the embedded ACME solver's **bind host** could not accept the `tcp6/` network-prefixed representation in the observed Caddy runtime. **Root cause CONFIRMED: gateway Caddyfile bind-host construction, not upstream router/ISP and not CA authorization reject**. First-time missing ACME account file is informational; accounts were successfully registered. Caddy source: https://caddyserver.com/docs/caddyfile/directives/bind .
