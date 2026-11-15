@@ -67,6 +67,14 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Public CA certificate test: explicit owner approval — 2026-11-15
+
+- Owner directly **APPROVED** the separate stock-Caddy public **ACME TLS-ALPN-01 static-only certificate test**, after being notified that registered hostname may appear in **Certificate Transparency logs** and CA account/certificate/key storage can persist. Scope: exact laptop IPv6 TCP443 only, Windows Private ActiveStore rule scoped to Caddy executable, **300 seconds** bounded exposure and independent expiry watchdog. **No public MCP**, no CDP 9444, no router login, no port80/DNS provider/token.
+- [PR #8](https://github.com/trung-via/mcp-gateway/pull/8) moved DRAFT → **READY FOR REVIEW**, still OPEN / **UNMERGED**, observed head `5ca05e345389e42ab94388ba24672513acbba836`.
+- Both relevant PR-head CI runs PASS: [PS7 AST+static safety](https://github.com/trung-via/mcp-gateway/actions/runs/43661218609) and [MCP protocol/ASGI](https://github.com/trung-via/mcp-gateway/actions/runs/43661218555). **Neither executed ACME/Windows firewall on laptop.**
+- **Next LIVE proof owner:** operator runs `p2-public-tls443-static-probe.ps1` from PR #8 in elevated PowerShell 7, with `-Hostname` set locally, `-DurationSeconds 300 -ApprovePublicACME`, and reports `PUBLIC_TLS_TRUST=PASS_VALIDATED_WITHOUT_INSECURE` or failure, normal cleanup `FIREWALL_TEST_RULE=REMOVED` and `TEMP_CADDY=STOPPED`, independent 0 listener/0 rule check. Logs (if any) must be redacted before sharing. **PUBLIC_CA_ISSUANCE_UNVERIFIED** until those receipts.
+- Permission only covers bounded certificate/static route proof. A future public `/mcp` reverse proxy and real ChatGPT caller need separate security/reachability verification.
+
 ## Public CA TLS-ALPN-01 static-only staging PR #8 — 2026-11-15
 
 - **SOURCE preparation only**: [Draft PR #8](https://github.com/trung-via/mcp-gateway/pull/8), branch `p2/trusted-tls-alpn-01-static-probe-20261115`, head last observed `5ca05e345389e42ab94388ba24672513acbba836`, **OPEN / DRAFT / UNMERGED**.
