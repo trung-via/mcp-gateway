@@ -1,0 +1,74 @@
+name: P2 IPv6 ingress temporary probe PowerShell checks
+
+on:
+  pull_request:
+    paths:
+      - "scripts/p2-ipv6-443-*.ps1"
+      - ".github/workflows/p2-ipv6-443-script-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  powershell-parse-and-static-safety:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse scripts without executing or opening ports
+        shell: pwsh
+        run: |
+          $files = @(
+            'scripts/p2-ipv6-443-temporary-probe.ps1',
+            'scripts/p2-ipv6-443-cleanup-watchdog.ps1'
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            $resolved = (Resolve-Path $file).Path
+            $null = [System.Management.Automation.Language.Parser]::ParseFile(
+              $resolved, [ref]$tokens, [ref]$errors
+            )
+            if (@($errors).Count -ne 0) {
+              $errors | ForEach-Object { Write-Error "$file - $($_.Message)" }
+              throw "POWERSHELL_PARSE_FAIL: $file"
+            }
+            Write-Output "POWERSHELL_PARSE_PASS: $file"
+          }
+
+      - name: Verify test-only static response and scoped firewall contract
+        shell: pwsh
+        run: |
+          $main = Get-Content -Raw scripts/p2-ipv6-443-temporary-probe.ps1
+          $guard = Get-Content -Raw scripts/p2-ipv6-443-cleanup-watchdog.ps1
+          $mandatory = @(
+            '#Requires -RunAsAdministrator',
+            '-PolicyStore ActiveStore',
+            '-Profile Private',
+            '-LocalAddress $ipv6',
+            '-Program $caddyPath',
+            '-LocalPort 443',
+            'tls internal',
+            'skip_install_trust',
+            'admin off',
+            'respond $probePath',
+            "MCP_BACKEND_EXPOSED=NO",
+            "New-NetFirewallRule",
+            "Remove-NetFirewallRule",
+            "finally"
+          )
+          foreach ($marker in $mandatory) {
+            if (-not $main.Contains($marker)) {
+              throw "SAFETY_MARKER_MISSING: $marker"
+            }
+          }
+          if ($main -match 'reverse_proxy|Start-Process.*CDP|Set-NetFirewallProfile|netsh.*firewall') {
+            throw "UNEXPECTED_UNBOUNDED_OR_PROXY_EFFECT"
+          }
+          if (-not $guard.Contains('Remove-NetFirewallRule') -or
+              -not $guard.Contains('ExpectedConfigPath')) {
+            throw "WATCHDOG_CONTRACT_MISSING"
+          }
+          Write-Output "STATIC_SAFETY_MARKERS_PASS"
