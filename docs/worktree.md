@@ -67,6 +67,14 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Third ACME trial log classifier returned unspecified errors; rollback 0/0 — 2026-11-15
+
+Operator executed read-only newest Caddy error log categorization after third 300-second ACME trial. `ACME_LOG=FOUND`; output showed **three `CERTIFICATE_REQUEST_STARTED` and three `CHALLENGE_STARTED` events**, with **six `OTHER_ACME_ERROR`** records (two errors following each challenge start). The classifier's `OTHER_ACME_ERROR` is a catchall for **any nonempty error string** not recognized by its patterns. This **does not establish the underlying error**, a return of prior `missing port in address`, a specific CA denial, or certificate issuance. No `CERTIFICATE_OBTAINED` event observed in the inspected log segment.
+
+Independent Windows postcheck **`PORT443_LISTENERS=0`** and **`ACME_TEST_RULES=0`** now confirms full cleanup after trial #3. Prior attempt output also had `FIREWALL_TEST_RULE=REMOVED`, `TEMP_CADDY=STOPPED`. No public MCP or other host service was exposed.
+
+**Next authorized action**: read-only review of the **first few unique sanitized literal Caddy `error` messages from newest log**, with domain, global IPv6/IP, CA order/account URLs, paths, emails, credentials redacted. Do not put sensitive raw log into public GitHub. Do not start a fourth ACME request or open firewall; existing consent exhausted. Keep P0-004 public TLS / real ChatGPT Chat MCP tool call `UNVERIFIED` until actual trusted HTTPS and client proof.
+
 ## Third public ACME TLS-ALPN-01 trial: trusted HTTPS NOT VERIFIED — 2026-11-15
 
 **USER_LIVE Windows operator receipt, after explicit one-off third trial consent:** `CADDY_HTTP_IPV6_LISTENER=PASS`, `CADDY_ACME_BIND_HOST_RAW_IPV6=PASS`, `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `TEMP_IPV6_443_LISTENER=BOUND`, `FIREWALL_TEST_RULE=SCOPED_ACTIVE`, `TLS_CERTIFICATE=PUBLIC_ACME_PENDING`, `MCP_BACKEND_EXPOSED=NO`, `WINDOW_SECONDS=300`, `ACME_CHALLENGE=TLS_ALPN_01_TCP443_ONLY`, **`PUBLIC_TLS_TRUST=NOT_VERIFIED_WITHIN_WINDOW`**, expiry completed, `FIREWALL_TEST_RULE=REMOVED`, `TEMP_CADDY=STOPPED`.
