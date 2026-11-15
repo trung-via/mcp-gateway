@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Temporary IPv6 443 ingress probe PR #7 — approved scope, unexecuted (2026-11-15)
+
+- **Human approval:** user explicitly approved proceeding with the previously defined bounded IPv6 inbound TCP443 test that requires no router login. Approval is for this temporary, single-port, test-only exposure, NOT permanent public MCP, unrestricted host permissions, or production rollout.
+- **[PR #7](https://github.com/trung-via/mcp-gateway/pull/7) READY FOR REVIEW / OPEN / UNMERGED**, isolated branch `p2/ipv6-443-temporary-ingress-probe-20261115`; current observed head `054063dbc30de621f2ba2e4a95e72024a71feab8`.
+- Source: `scripts/p2-ipv6-443-temporary-probe.ps1`, companion detached cleanup watchdog, operator instructions `docs/p2-ipv6-443-temporary-ingress-probe.md`, and Windows AST/static security workflow.
+- **[Windows CI 43656736822](https://github.com/trung-via/mcp-gateway/actions/runs/43656736822) SUCCESS** at this head: PowerShell AST parse for both scripts and static safety markers. This does **NOT** prove actual Windows firewall or Caddy execution.
+- Bounded effect on laptop when **operator runs it**: new Caddy instance only, `tls internal`, single fixed static response at test path, exact global IPv6 TCP443, `admin off`, no `reverse_proxy`; one unique temporary ActiveStore Windows Private allow rule limited to exact local IPv6, 443 and Caddy program; 180-second limit + independent +30-second watchdog; emergency scoped cleanup. Existing 127.0.0.1:8443 Caddy, 127.0.0.1:18080 MCP and CDP 9444 never exposed or stopped.
+- **CURRENT EVIDENCE:** SCRIPT CODE+CI PASS; **WINDOWS_EXECUTION_UNVERIFIED, INGRESS_EXTERNAL_UNVERIFIED**. User must run from elevated PowerShell 7 and test via mobile cellular data (Wi-Fi OFF), with IPv6-capable operator network. Internal self-issued certificate warning is expected. Return exact static HTTP response vs certificate warning vs timeout; do not infer router block if phone has no IPv6.
+- **STILL REQUIRED** after ingress success: publicly trusted TLS, rotated dynv6 credential if provider API ever used, and real normal ChatGPT custom MCP Server URL tool-call witness. Never claim public MCP live from this static probe alone. No router login, Tunnel, Work or Render.
+
 ## Windows no-mutation IPv6 preflight PASS — 2026-11-15
 
 **Human actual laptop execution (PowerShell 7):** fetched Draft [PR #6](https://github.com/trung-via/mcp-gateway/pull/6) script `scripts/p2-windows-ipv6-preflight.ps1` via Git `FETCH_HEAD` into local temp location (without switching the repo branch); executed with the operator's actual dynv6 hostname. Output was exactly:
