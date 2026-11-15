@@ -67,6 +67,15 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Public CA TLS-ALPN-01 static-only staging PR #8 — 2026-11-15
+
+- **SOURCE preparation only**: [Draft PR #8](https://github.com/trung-via/mcp-gateway/pull/8), branch `p2/trusted-tls-alpn-01-static-probe-20261115`, head last observed `5ca05e345389e42ab94388ba24672513acbba836`, **OPEN / DRAFT / UNMERGED**.
+- Reuses the tested isolated Caddy/exact-global-IPv6 TCP443 + scoped Windows Private ActiveStore rule and detached cleanup watchdog, but **replaces `tls internal` with public ACME `issuer acme { disable_http_challenge }`** to force **TLS-ALPN-01** validation on **443 only**. **NO port80; NO dynv6 DNS module/token; NO MCP reverse proxy**. Test route serves a fixed static body, 404 otherwise; existing localhost Caddy 8443 / MCP 18080 untouched.
+- New PowerShell `scripts/p2-public-tls443-static-probe.ps1` **fails closed without explicit `-ApprovePublicACME`** and only marks `PUBLIC_TLS_TRUST=PASS_VALIDATED_WITHOUT_INSECURE` when local curl validates the exact hostname and static response using normal OS certificate trust (no `-k` or `--insecure`). 300s default bounded exposure, watchdog at +30s, rollback scoped firewall rule/process only. Caddy ACME account and cert/key might persist in default Caddy storage.
+- **Risk/approval:** contacting a public CA and obtaining a trusted certificate is a new external effect. The home hostname may enter public Certificate Transparency logs. This requires **separate explicit operator approval** before running on laptop. Earlier dynv6 API token must be rotated privately if ever used in another DNS update; no API token is needed for TLS-ALPN-01.
+- **[Windows CI run 43661218609](https://github.com/trung-via/mcp-gateway/actions/runs/43661218609) SUCCESS**: PS7 AST parse of the script and watchdog plus static fail-closed/no-proxy/firewall constraints. CI does **not** issue cert or prove live TLS. Runbook in `docs/p2-public-tls-alpn01-static-gate.md`.
+- **State:** direct IPv6 TCP443 ingress from independent source **LIVE PASS** (prior trial), **public CA issuance NOT_STARTED**, **normal ChatGPT IPv6-only server /mcp invocation NOT_STARTED**. Issue #2 stays OPEN. No router login/Tunnel/Render/Work, no CDP 9444 or private data exposed.
+
 ## IPv6 direct inbound PASS with independent remote checker — 2026-11-15
 
 Human actually ran enhanced [PR #7](https://github.com/trung-via/mcp-gateway/pull/7) 180-second script on the Windows laptop. **Source:** operator PowerShell transcript, not CI-only:
