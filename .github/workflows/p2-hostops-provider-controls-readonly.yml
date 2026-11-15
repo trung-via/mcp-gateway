@@ -66,7 +66,7 @@ jobs:
               'checkhost_distinct_asns'
             )) {
               $value = $receipt.PSObject.Properties[$field].Value
-              if ($value -isnot [int] -or $value -lt 0 -or $value -gt 8) {
+              if (($value -isnot [int] -and $value -isnot [long]) -or $value -lt 0 -or $value -gt 8) {
                 throw 'UNAUTHORIZED_COUNT'
               }
             }
