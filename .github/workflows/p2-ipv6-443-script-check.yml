@@ -58,6 +58,18 @@ jobs:
             "New-NetFirewallRule",
             "Remove-NetFirewallRule",
             "[switch] $UseTcpDataIPv6Probe",
+            "[switch] $UseMultiSourceIPv6Probe",
+            "[switch] $ApproveTemporaryIngress",
+            "[switch] $ApproveRemoteProbeDisclosure",
+            "[ValidateRange(60,180)]",
+            "REMOTE_TCPDATA_IPV6_CONTROL=PASS",
+            "REMOTE_CHECKHOST_IPV6_DISTINCT_ASN_CONTROL=PASS",
+            "REMOTE_CHECKHOST_IPV6_SUCCESS_COUNT=",
+            "Test-CheckHostIPv6Hit",
+            "ipv6.google.com:443",
+            "check-host.net/check-tcp",
+            "MAX_FIREWALL_WINDOW_SECONDS=",
+            "'-DelaySeconds', [string]$DurationSeconds",
             "LOCAL_IPV6_HTTPS_STATIC=PASS",
             "REMOTE_IPV6_TCPDATA_STATUS=",
             "ipv6.google.com",
@@ -76,6 +88,25 @@ jobs:
           }
           if (-not $main.Contains('if ($UseTcpDataIPv6Probe)')) {
             throw "REMOTE_CHECK_MUST_REQUIRE_EXPLICIT_OPT_IN"
+          }
+          if (-not $main.Contains('if (-not $ApproveTemporaryIngress)') -or
+              -not $main.Contains('if ($UseMultiSourceIPv6Probe -and -not $ApproveRemoteProbeDisclosure)')) {
+            throw 'MISSING_EXPLICIT_HOST_AND_REMOTE_DISCLOSURE_GRANTS'
+          }
+          if ($main -match '(?m)^s*[ValidateRange(60,(?!180))' -or
+              $main.Contains('($DurationSeconds + 30)') -or
+              -not $main.Contains('AddSeconds($DurationSeconds - 15)')) {
+            throw 'TEMP_FIREWALL_HARD_CEILING_180_REQUIRED'
+          }
+          if ($main -match '(?mi)^s*(issuers+acme|acme_ca|disable_http_challenge|reverse_proxy|tlss+internals+.*S)') {
+            throw 'NON_CA_STATIC_ONLY_CONFIG_REQUIRED'
+          }
+          if (-not $main.Contains('REMOTE_PROBE_SCOPE=TCP_ONLY; external TLS-SNI/ALPN not established')) {
+            throw 'TCP_EVIDENCE_MUST_NOT_CLAIM_TLS_OR_ACME'
+          }
+          if ($main.IndexOf('REMOTE_CHECKHOST_IPV6_DISTINCT_ASN_CONTROL=PASS') -ge
+              $main.IndexOf('New-NetFirewallRule -PolicyStore ActiveStore')) {
+            throw 'MULTISOURCE_CONTROLS_MUST_PRECEDE_FIREWALL'
           }
           if (-not $guard.Contains('Remove-NetFirewallRule') -or
               -not $guard.Contains('ExpectedConfigPath')) {
