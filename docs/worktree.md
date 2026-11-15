@@ -67,6 +67,31 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## IPv6 direct inbound PASS with independent remote checker — 2026-11-15
+
+Human actually ran enhanced [PR #7](https://github.com/trung-via/mcp-gateway/pull/7) 180-second script on the Windows laptop. **Source:** operator PowerShell transcript, not CI-only:
+
+```text
+REMOTE_IPV6_CHECKER_CONTROL=PASS
+LOCAL_IPV6_HTTPS_STATIC=PASS
+REMOTE_IPV6_TCPDATA_STATUS=OPEN
+TEMP_IPV6_443_LISTENER=BOUND
+FIREWALL_TEST_RULE=SCOPED_ACTIVE
+MCP_BACKEND_EXPOSED=NO
+TLS_CERTIFICATE=INTERNAL_TEST_ONLY
+TEST_WINDOW=EXPIRED
+FIREWALL_TEST_RULE=REMOVED
+TEMP_CADDY=STOPPED
+```
+
+**ACCEPTED EVIDENCE**: `DIRECT_IPV6_TCP443_INGRESS_PASS / USER_LIVE` for a bounded external TCPData check reporting **OPEN** via an IPv6-capable source, after successful known IPv6 positive control and exact local global-IPv6 HTTPS response. This is stronger than prior invalid phone probe (no IPv6 capability). **Previous router IPv6 ingress UNKNOWN is updated: in this specific trial inbound TCP443 was reachable.** Router admin access remains unavailable and unnecessary. **No HTTP static body was observed from the external checker**, only its reported TCP/HTTPS port OPEN status.
+
+**Safety evidence:** isolated static-only Caddy with internal, untrusted test certificate; MCP backend EXPOSED=NO; firewall scope ACTIVE during test; 180-second expiry with `FIREWALL_TEST_RULE=REMOVED`, `TEMP_CADDY=STOPPED`. Additional independent 0/0 post-check is not in this turn's transcript, so do not assert it was rerun for trial #2. No permanent 443 service or firewall approval from this test.
+
+**Next gate (proposed, separate approval):** stock Caddy **ACME TLS-ALPN-01** to obtain a real publicly trusted certificate using only inbound TCP443. No DNS-01 plugin, dynv6 API token or port 80 needed; use a **static-only** Caddy proof route first and no MCP reverse proxy. Verify certificate with a normal TLS client **without `-k`** and capture issuer/chain/expiry without sharing residential IPv6. Use scoped ActiveStore firewall, watchdog, bounded expiry and safe rollback; ACME issuance may persist Caddy certificate material and contact public CA, so do not execute until explicitly approved. Then a separately authorized read-only `gateway_health` public MCP + ChatGPT Chat actual tool call. **ChatGPT ability to connect to IPv6-only endpoint is still UNVERIFIED**.
+
+Official background: https://caddyserver.com/docs/automatic-https (TLS-ALPN-01 requires 443), https://caddyserver.com/docs/caddyfile/directives/tls and https://developers.openai.com/plugins/deploy/connect-chatgpt . The PUBLIC repo must not include residential global IPv6, hostname, local Windows username or earlier dynv6 token.
+
 ## P2 trial #2 independent TCPData IPv6 checker code ready — 2026-11-15
 
 **Reason:** first external mobile phone test was INVALID_REMOTE_PROBE_CLIENT_NO_IPV6 (human screenshot: mobile IPv6 unavailable, 0/10); no evidence yet that upstream router passes or blocks inbound IPv6. User approved continuing with a third-party IPv6-aware TCP checker knowing it may receive/store the residential destination IPv6/hostname.
