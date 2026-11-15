@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## ACME trial #3: explicit bounded human approval — 2026-11-15
+
+**Human explicit acceptance:** user replied `ok đồng ý` to the question authorizing **exactly ONE third** real public ACME TLS-ALPN-01 static-only test after independent Windows raw-IPv6 `-CheckBindOnly` showed `CADDY_HTTP_IPV6_LISTENER=PASS`, `CADDY_ACME_BIND_HOST_RAW_IPV6=PASS`, `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `PUBLIC_ACME_CA_CONTACT=NO`, `NO_FIREWALL_CHANGE=YES`. Approval includes the previously disclosed CA contact/Certificate Transparency and potentially persistent Caddy certificate/private-key material, not public MCP/service deployment.
+
+**Pinned PR:** [PR #8](https://github.com/trung-via/mcp-gateway/pull/8) head `bf60dc6c8ba3d2b7bc4bcce12c733c0dfcf50f90`. [CI MCP #43667100706](https://github.com/trung-via/mcp-gateway/actions/runs/43667100706) PASS at this head; the later revised PowerShell-only regression workflow is not independently CI-proven at exactly this head. **Windows host dry-run is actual native proof; source/static CI does not substitute for CA challenge runtime.**
+
+**Permission / safety:** operator may run **once** on Windows elevated PS7 with `-DurationSeconds 300 -ApprovePublicACME`, pinned Git SHA, static-only Caddy, exact selected global IPv6:443, firewall ActiveStore Private scoped exact Caddy program/IP/443, watchdog+finally. No port80, DNS plugin/token, router login, MCP backend, CDP 9444, Tunnel, Render, Work, or AI Commerce host control. Script reports trusted certificate only on curl without `-k`. User-local execution only; no Windows effects made in the GitHub approval update.
+
+**State before run:** third CA attempt `NOT_STARTED`; live trusted public TLS `UNVERIFIED`; ChatGPT `/mcp` actual tool call `UNVERIFIED`. After one run, capture trust verdict, Caddy cleanup receipts, independent 0/0 listener/firewall rule checks. If failure, no fourth retry without log RCA and new approval.
+
 ## Windows raw IPv6 ACME bind_host check PASS — 2026-11-15
 
 **USER_LIVE native Windows PowerShell witness:** operator fetched pinned [PR #8](https://github.com/trung-via/mcp-gateway/pull/8) commit `bf60dc6c8ba3d2b7bc4bcce12c733c0dfcf50f90` and ran the non-public-CA `-CheckBindOnly` preflight:
