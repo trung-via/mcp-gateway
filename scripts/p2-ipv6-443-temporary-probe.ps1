@@ -220,6 +220,44 @@ try {
         Write-Output 'REMOTE_IPV6_TCPDATA_NOTE=Non-open results may include untrusted test TLS; not router proof'
     }
 
+    # Multi-source proof INSIDE one active firewall window:
+    # TCPData provider + 2-3 Check-Host nodes already verified as IPv6
+    # capable and distinct-ASN during the safe preflight.
+    if ($UseMultiSourceIPv6Probe) {
+        if ((Get-Date) -ge $deadline) {
+            Write-Output 'MULTISOURCE_STATUS=INCONCLUSIVE_WINDOW_EXPIRED'
+        } else {
+            try {
+                $status = Get-TcpDataPortStatus -Target $ipv6
+                Write-Output "REMOTE_IPV6_TCPDATA_STATUS=$($status.ToUpperInvariant())"
+            } catch {
+                Write-Output 'REMOTE_IPV6_TCPDATA_STATUS=INCONCLUSIVE_PROVIDER_ERROR'
+            }
+            if ((Get-Date) -ge $deadline) {
+                Write-Output 'REMOTE_CHECKHOST_STATUS=INCONCLUSIVE_WINDOW_EXPIRED'
+            } else {
+                try {
+                    $ids = @($checkHostNodes | ForEach-Object { $_.Node })
+                    # Only this provider's host:port URI uses IPv6 brackets.
+                    # Caddy's separate raw bind_host is not involved.
+                    $destination = '[' + $ipv6 + ']:443'
+                    $remote = Invoke-CheckHostTcp -Target $destination -Nodes $ids
+                    $pass = 0
+                    foreach ($node in $checkHostNodes) {
+                        $ok = Test-CheckHostIPv6Hit -Report $remote -Node $node.Node -ExpectedIPv6 $ipv6
+                        if ($ok) { $pass++ }
+                        $state = if ($ok) { 'TCP_IPV6_PASS' } else { 'FAILED_OR_INCONCLUSIVE' }
+                        Write-Output "REMOTE_CHECKHOST_NODE=$($node.Node) ASN=$($node.Asn) STATUS=$state"
+                    }
+                    Write-Output "REMOTE_CHECKHOST_IPV6_SUCCESS_COUNT=$pass"
+                } catch {
+                    Write-Output 'REMOTE_CHECKHOST_STATUS=INCONCLUSIVE_PROVIDER_ERROR'
+                }
+            }
+        }
+        Write-Output 'REMOTE_PROBE_SCOPE=TCP_ONLY; external TLS-SNI/ALPN not established'
+    }
+
     Write-Output 'TEMP_IPV6_443_LISTENER=BOUND'
     Write-Output 'FIREWALL_TEST_RULE=SCOPED_ACTIVE'
     Write-Output 'MCP_BACKEND_EXPOSED=NO'
