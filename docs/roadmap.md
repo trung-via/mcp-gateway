@@ -1,5 +1,7 @@
 # MCP Gateway — canonical roadmap
 
+**2026-11-15 HostOps update:** user chose dedicated **Public** [`trung-via/mcp-gateway-hostops`](https://github.com/trung-via/mcp-gateway-hostops), independent of AI Commerce, with broad owner authorization intent. [HostOps PR #1 merged](https://github.com/trung-via/mcp-gateway-hostops/pull/1) and PR/main Windows policy CI PASS. [Negative owner admission run #43686329911](https://github.com/trung-via/mcp-gateway-hostops/actions/runs/43686329911) DENY/SKIP. GitHub runner list empty, so **native HostOps BLOCKED** until dedicated Windows runner enrolled; ChatGPT live MCP and public TLS still unverified. [ADR-0004](adr/0004-public-hostops-authorization.md) supersedes ADR-0003 private visibility.
+
 Reconciled: **2026-11-14**, public [`trung-via/mcp-gateway`](https://github.com/trung-via/mcp-gateway) (`main`). An Issue, PR, source commit, CI run and live tool call are separate evidence tiers.
 
 ## Status definitions
