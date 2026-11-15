@@ -100,9 +100,10 @@ $config = @"
 }
 
 https://$Hostname {
-    # Important: use HOST-only bind. Supplying tcp6/ here causes Caddy's
-    # TLS-ALPN embedded solver to build a malformed listener address.
-    bind [$ipv6]
+    # Critical ACME runtime rule: use RAW IPv6 host text (no [] or tcp6/).
+    # Caddy's TLS-ALPN solver adds IPv6 brackets when building host:port.
+    # bind [$ipv6] passed HTTP adaptation but caused double brackets in ACME.
+    bind $ipv6
     tls {
         issuer acme {
             disable_http_challenge
@@ -128,6 +129,34 @@ try {
     if ($listeners.Count -ne 1 -or [string]$listeners[0] -notin @($expected, "tcp/$expected")) {
         throw 'STOP: Caddy adapted listener is not exactly the selected IPv6 TCP443 host; no effects.'
     }
+    # Validate the *ACME challenge bind host*, not just the HTTP listener.
+    # Earlier HTTP listener checks passed while the embedded TLS-ALPN
+    # solver failed at runtime with [[IPv6]] / missing port in address.
+    # An absent or bracketed bind_host fails closed before any CA effects.
+    $acmeBindHosts = @(
+        foreach ($policy in @($adapted.apps.tls.automation.policies)) {
+            foreach ($field in @('issuers', 'issuer')) {
+                $issuerProperty = $policy.PSObject.Properties[$field]
+                if ($null -eq $issuerProperty) { continue }
+                foreach ($issuer in @($issuerProperty.Value)) {
+                    if ($null -eq $issuer) { continue }
+                    $moduleProperty = $issuer.PSObject.Properties['module']
+                    if ($null -eq $moduleProperty -or $moduleProperty.Value -ne 'acme') { continue }
+                    $challenges = $issuer.PSObject.Properties['challenges']
+                    if ($null -eq $challenges -or $null -eq $challenges.Value) { continue }
+                    $bindHost = $challenges.Value.PSObject.Properties['bind_host']
+                    if ($null -ne $bindHost -and $null -ne $bindHost.Value) {
+                        [string] $bindHost.Value
+                    }
+                }
+            }
+        }
+    )
+    if ($acmeBindHosts.Count -ne 1 -or $acmeBindHosts[0] -cne $ipv6) {
+        throw 'STOP: ACME challenge bind_host is absent, bracketed or not the exact raw selected IPv6. No CA/firewall effects.'
+    }
+    Write-Output 'CADDY_HTTP_IPV6_LISTENER=PASS'
+    Write-Output 'CADDY_ACME_BIND_HOST_RAW_IPV6=PASS'
     Write-Output 'CADDY_BIND_IPV6_HOST_ONLY=PASS'
     if ($CheckBindOnly) {
         Write-Output 'PUBLIC_ACME_CA_CONTACT=NO'
