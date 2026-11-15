@@ -1,0 +1,48 @@
+name: MCP Gateway P2 HostOps source and offline contract tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/hostops/**'
+      - 'tests/hostops/**'
+      - '.github/workflows/p2-hostops-*.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/hostops/**'
+      - 'tests/hostops/**'
+      - '.github/workflows/p2-hostops-*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-hostops-contract:
+    runs-on: windows-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse HostOps script and run deterministic mocked controls
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tests/hostops/test-p2-provider-controls.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'OFFLINE_HOSTOPS_CONTRACT_FAILED' }
+      - name: Assert workflow cannot run arbitrary public issue commands
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $workflow = Get-Content -LiteralPath '.github/workflows/p2-hostops-provider-controls-readonly.yml' -Raw
+          foreach ($expected in @(
+            "github.actor == 'trung-via'",
+            'github.event.issue.number == 9',
+            "github.event.comment.body == '/mcp-gateway-hostops-p2-readonly-v1'",
+            'runs-on: [self-hosted, Windows, mcp-gateway-hostops]',
+            'ref: main',
+            'persist-credentials: false'
+          )) {
+            if (-not $workflow.Contains($expected)) { throw 'MISSING_FIXED_HOSTOPS_GUARD' }
+          }
+          if ($workflow -match '(?m)^\s+pull_request:' -or $workflow -match '(?m)^\s+workflow_dispatch:') {
+            throw 'UNAUTHORIZED_NATIVE_TRIGGER'
+          }
+          'P2_HOSTOPS_WORKFLOW_STATIC_GUARD=PASS'
