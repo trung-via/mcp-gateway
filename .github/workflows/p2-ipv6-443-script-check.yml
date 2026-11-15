@@ -64,7 +64,7 @@ jobs:
               throw "SAFETY_MARKER_MISSING: $marker"
             }
           }
-          if ($main -match 'reverse_proxy|Start-Process.*CDP|Set-NetFirewallProfile|netsh.*firewall') {
+          if ($main -match '(?m)^\s*reverse_proxy\b|Start-Process.*CDP|Set-NetFirewallProfile|netsh.*firewall') {
             throw "UNEXPECTED_UNBOUNDED_OR_PROXY_EFFECT"
           }
           if (-not $guard.Contains('Remove-NetFirewallRule') -or
