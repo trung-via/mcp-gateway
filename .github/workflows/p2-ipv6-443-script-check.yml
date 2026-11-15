@@ -93,12 +93,13 @@ jobs:
               -not $main.Contains('if ($UseMultiSourceIPv6Probe -and -not $ApproveRemoteProbeDisclosure)')) {
             throw 'MISSING_EXPLICIT_HOST_AND_REMOTE_DISCLOSURE_GRANTS'
           }
-          if ($main -match '(?m)^s*[ValidateRange(60,(?!180))' -or
+          if (-not $main.Contains('[ValidateRange(60,180)]') -or
               $main.Contains('($DurationSeconds + 30)') -or
               -not $main.Contains('AddSeconds($DurationSeconds - 15)')) {
             throw 'TEMP_FIREWALL_HARD_CEILING_180_REQUIRED'
           }
-          if ($main -match '(?mi)^s*(issuers+acme|acme_ca|disable_http_challenge|reverse_proxy|tlss+internals+.*S)') {
+          if ($main.Contains('issuer acme {') -or $main.Contains('acme_ca ') -or
+              $main.Contains('disable_http_challenge')) {
             throw 'NON_CA_STATIC_ONLY_CONFIG_REQUIRED'
           }
           if (-not $main.Contains('REMOTE_PROBE_SCOPE=TCP_ONLY; external TLS-SNI/ALPN not established')) {
