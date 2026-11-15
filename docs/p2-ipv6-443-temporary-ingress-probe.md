@@ -2,6 +2,31 @@
 
 Status: SOURCE ONLY. The owner approved a short, bounded external IPv6/TCP443 test. This script has NOT yet been executed on the Windows host.
 
+## Trial #2: externally sourced IPv6 check (2026-11-15)
+
+**Observed trial #1:** laptop's test Caddy listener and exact scoped ActiveStore firewall rule started, then cleaned up with postcheck zero. However, mobile 5G could not reach the URL. A later human screenshot from test-ipv6.com showed mobile IPv6 **UNAVAILABLE / 0-of-10 readiness**. The phone cannot serve as an IPv6 inbound test client; router/ISP ingress is still **UNVERIFIED**, not blocked.
+
+**Owner accepted continuing with a third-party IPv6-capable external checker** after being told the checker will learn the target's public hostname/IP. Optional command-line switch `-UseTcpDataIPv6Probe` turns this on; omitted switch performs *no third-party request*. The provider's [documented TCP/port endpoint](https://tcpdata.com/docs/port-check) supports IPv6 literals and reports `open`, `closed`, or `timeout`, but it **also attempts HTTPS on TCP 443**.
+
+The enhanced script:
+1. Checks a positive control `ipv6.google.com:443` through the provider **before starting Caddy/opening firewall**. If the provider cannot return `open` via IPv6, the test **aborts before exposure**.
+2. Starts the same isolated static-response Caddy on the laptop's exact global IPv6/443 with the 180-second ActiveStore rule and existing expiry watchdog.
+3. Validates local GET to that exact global IPv6 using curl with test-only `--insecure` (because `tls internal` is intentionally untrusted). `LOCAL_IPV6_HTTPS_STATIC=PASS` is required before remote attempt, reducing host-side ambiguity.
+4. Sends the **literal public IPv6** only to `tcpdata.com` while the temporary listener is active. The third party may log/retain it; there is no confidentiality guarantee. Response is summarized as `REMOTE_IPV6_TCPDATA_STATUS=OPEN|CLOSED|TIMEOUT|INCONCLUSIVE_PROVIDER_ERROR` and raw IPv6/response is not printed to terminal or public GitHub.
+5. Normal test cleanup and watchdog remove the rule/stop only the new Caddy. `0/0` postchecks are required. **OPEN** is a useful remote observation, but `CLOSED` and `TIMEOUT` are **not** definitive router evidence, because the provider attempts HTTPS and may reject the internal CA; use a plain TCP checker with confirmed IPv6 support if results remain ambiguous.
+
+### Single-window operator run (only after reviewing this script)
+
+Open PowerShell 7 **Run as Administrator**. Re-fetch the **updated** PR branch and copy both scripts using the commands in the next section, then invoke:
+
+~~~~powershell
+& (Join-Path $testDir "p2-ipv6-443-temporary-probe.ps1") -Hostname "your-hostname.dynv6.net" -DurationSeconds 180 -UseTcpDataIPv6Probe
+~~~~
+
+This does not require a phone or router login, Tunnel/Render/Work, dynv6 API token, custom Caddy DNS module, or public CA certificate. If external provider preflight fails, **stop** and diagnose checker access without opening a new firewall rule.
+
+**Evidence at time of authoring:** code change prepared in branch; enhanced script **not yet executed on Windows** and remote public IPv6 result not yet obtained. Do not claim ingress PASS based on CI or local bind alone.
+
 ## Scope and safety
 
 This test is not a public MCP server. A separate Caddy instance serves ONE fixed test-only body at /__mcp_p2_ipv6_ingress_probe and HTTP 404 elsewhere. There is no reverse proxy, no CDP 9444, no host adapter, no GitHub tool, and no private project data.
