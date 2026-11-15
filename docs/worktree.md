@@ -67,6 +67,18 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## PR #7 multi-source IPv6 ingress diagnostic PREPARED, no CA (2026-11-15)
+
+**Human decision:** the user explicitly consented to **PREPARE** a non-CA, static-only TCP443 multi-source IPv6 diagnostic, with temporary firewall open at most **180 seconds**. This source-preparation approval **does not authorize an actual native Windows execution** or any fourth public ACME CA attempt.
+
+**Implementation in [PR #7](https://github.com/trung-via/mcp-gateway/pull/7), OPEN / UNMERGED, head `626b753ded514cb15a32ea1af3eed8b2832014b8`:** extended existing Caddy `tls internal` static-only script instead of adding another agent. Added `-UseMultiSourceIPv6Probe`, `-ApproveTemporaryIngress`, `-ApproveRemoteProbeDisclosure`. Multi-source mode checks positive control IPv6-only `ipv6.google.com:443` via TCPData + at least two Check-Host remote nodes with IPv6-confirmed destination and **distinct ASNs before creating a listener/firewall**. If capability cannot be demonstrated, STOP with no host exposure. Then within same window and exact selected Wi-Fi global IPv6 TCP443/Private ActiveStore firewall scope, check local static HTTPS body and remote TCP status from TCPData/selected Check-Host nodes. Only results carrying **exact matching target IPv6** qualify as remote TCP PASS. This does not claim remote TLS SNI/ALPN/HTTP, CA issuance or ChatGPT MCP. Optional independently IPv6-capable remote `curl -6 -k` runbook step would supply remote TLS static-body witness if available.
+
+**Bounded rollback**: duration validation **60–180 seconds**, independent watchdog spawned before rule creation and scheduled at DurationSeconds (not +30). Main finally closes rule/isolated Caddy normally **15 seconds before** watchdog ceiling; independent 0/0 postcheck required. No port80, router login, DNS token, public ACME, MCP proxy, CDP 9444, Tunnel/Render/Work.
+
+**CI VERIFIED at exact head:** [Windows PS7 AST & static safety #43676212340](https://github.com/trung-via/mcp-gateway/actions/runs/43676212340) SUCCESS; [MCP read-only suite #43676212343](https://github.com/trung-via/mcp-gateway/actions/runs/43676212343) SUCCESS. Real Check-Host API response shape, remote node IPv6 availability, in-window TCP/TLS outcomes and native cleanup for the *new* flow are **NOT YET USER_LIVE verified**. Earlier GitHub CI failures during source assembly were repaired; final head PASS.
+
+**Next**: independent Brain review and **separately approved native one-off run** pinned to exact PR7 head, or no network action. If run, log preflight receipts/ready time, TCPData/Check-Host source status, `FIREWALL_TEST_RULE=REMOVED`, `TEMP_CADDY=STOPPED`, and postcheck TCP443 listener=0 / ActiveStore rule=0. Further ACME attempts remain unauthorized. [Runbook](https://github.com/trung-via/mcp-gateway/blob/p2/ipv6-443-temporary-ingress-probe-20261115/docs/p2-ipv6-443-temporary-ingress-probe.md).
+
 ## Three-resolver AAAA matches laptop — 2026-11-15
 
 **USER_LIVE read-only DNS test (Windows laptop, no hostname/IP published):**
