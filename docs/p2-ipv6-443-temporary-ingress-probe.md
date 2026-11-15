@@ -2,6 +2,54 @@
 
 Status: SOURCE ONLY. The owner approved a short, bounded external IPv6/TCP443 test. This script has NOT yet been executed on the Windows host.
 
+## Source-only preparation: multi-source IPv6 reachability after CA failure (2026-11-15)
+
+**Current source stage: PREPARED IN PR #7, NOT EXECUTED FOR THIS NEW TEST.** After three bounded ACME issuance trials, the latest Caddy TLS-ALPN-01 challenge was rejected by the CA with "Unable to contact <HOST> at <IPV6>, no IPv4 addresses to try as fallback". A previous independent TCPData IPv6/443 static probe reported OPEN in a *different* trial window. Three external DNS resolvers currently return one AAAA each matching the laptop, but that does not reconstruct the CA-time DNS. The next meaningful test isolates **remote source-dependent TCP connectivity from certificate issuance**, without any ACME contact.
+
+### Explicit authorization and strict timing
+
+The owner approved **source preparation** of a static-only, non-CA, multi-source IPv6/443 measurement with a temporary Windows rule lasting **no more than 180 seconds**. That decision does **not** authorize an unreviewed Windows execution or repeated CA attempts. Script changes are PR-only; no router/firewall/DNS/laptop mutation occurred by writing these files.
+
+- PowerShell script requires **-ApproveTemporaryIngress** before any listener/rule and **-ApproveRemoteProbeDisclosure** when using the new remote checkers. The services may record or retain the public IPv6 and test metadata. No secret token is sent.
+- **-DurationSeconds** is now constrained to **60–180**, and independent watchdog starts *before* the temporary ActiveStore rule with delay **DurationSeconds** (not duration+30). Main script attempts cleanup **15 seconds earlier** than this ceiling. The watchdog only removes the test rule and stops the exact matching temporary Caddy executable/config, and cannot change other Caddy services. This is best-effort fail-safe; independent 0/0 postcheck remains mandatory.
+- Caddy still serves **only one fixed static body** on exact selected global Wi-Fi IPv6 TCP443 using **tls internal**, no public ACME, no HTTP80, no MCP reverse proxy, no CDP/HostOps/Windows adapters, and no changes to existing 8443/18080 endpoints.
+- Before exposure, the script validates Private firewall default inbound Block, unique preferred global IPv6, matching public AAAA, absence of TCP443 listener and a companion watchdog. The multi-source mode also demands TCPData can reach IPv6-only \`ipv6.google.com:443\` **and two Check-Host nodes in distinct ASNs** can prove their successful destination addresses were IPv6. If controls fail, it **aborts before opening TCP443**.
+- During the **same** short window, Caddy's HTTPS static response is locally checked with curl using only **test-specific** \`--insecure\` for the intentionally untrusted internal CA. The script queries TCPData and Check-Host target **IPv6 literal:443**; a Check-Host node counts as PASS only when its result includes the exact selected target IPv6 and TCP connection time. Otherwise status remains FAILED_OR_INCONCLUSIVE. Provider timeout/schema changes must **not** be interpreted as a definitive router/ISP block. This is **TCP evidence**, not independent remote TLS-SNI/ALPN proof.
+
+### Operator command (review-only, not permission to run)
+
+After exact PR #7 HEAD and Windows CI are reviewed and a separate native host execution approval is confirmed, run once from elevated PowerShell 7, with both scripts fetched from pinned commit without changing the checked-out branch:
+
+~~~~powershell
+# Example ONLY. Fetch and PIN the reviewed Git commit before execution.
+& (Join-Path $testDir "p2-ipv6-443-temporary-probe.ps1") -Hostname "your-host.dynv6.net" -DurationSeconds 180 -UseMultiSourceIPv6Probe -ApproveTemporaryIngress -ApproveRemoteProbeDisclosure
+~~~~
+
+Expected safe markers: REMOTE_TCPDATA_IPV6_CONTROL=PASS, REMOTE_CHECKHOST_IPV6_DISTINCT_ASN_CONTROL=PASS, FIREWALL_READY_UTC, MAX_FIREWALL_WINDOW_SECONDS=180, LOCAL_IPV6_HTTPS_STATIC=PASS, REMOTE_IPV6_TCPDATA_STATUS, REMOTE_CHECKHOST_NODE statuses / REMOTE_CHECKHOST_IPV6_SUCCESS_COUNT, and cleanup \`FIREWALL_TEST_RULE=REMOVED\`, \`TEMP_CADDY=STOPPED\`. **Confirm after return**: 0 local TCP443 listeners; 0 ActiveStore rules with exact display name. No TCP OPEN outcome can establish a public CA certificate, HTTP trust or normal ChatGPT MCP tool-call.
+
+### How to distinguish TCP from full TLS remotely
+
+For **remote TLS/HTTP SNI** evidence, a separately controlled machine with known IPv6 egress (not the phone previously shown IPv6-incapable) can, during the active window, run the command below. The \`--insecure\` applies **only** to this test-only private Caddy CA. The hostname preserves SNI and the resolved IPv6 pins the destination, with no system-wide trust-store changes:
+
+~~~~bash
+# Run on an independently IPv6-capable remote machine while test is active.
+curl -6 --insecure --http1.1 --resolve 'your-host.dynv6.net:443:[YOUR_LAPTOP_GLOBAL_IPV6]' --connect-timeout 3 --max-time 8 'https://your-host.dynv6.net/__mcp_p2_ipv6_ingress_probe'
+~~~~
+
+Expected literal response: \`MCP_P2_IPV6_TCP443_REACHABLE\`. If no such independent remote machine exists, mark \`REMOTE_TLS_SNI_HTTP=UNVERIFIED\` rather than substituting a local curl PASS. **The previous mobile data connection has no IPv6** and must not be treated as an external IPv6 TLS client. Remote IP/hostname must not be published to GitHub.
+
+### Interpretation and response to ambiguity
+
+1. At least two Check-Host ASN-distinct IPv6 nodes plus TCPData OPEN, same window => multiperspective **TCP443 ingress** observed; does not prove Let's Encrypt validation.
+2. Mixed success/timeouts across checkers => source-/path-dependent filtering or provider artifacts are hypotheses; investigate read-only firewall/profile/capture and network behavior before another test.
+3. All sources fail but local HTTPS passes => externally visible path likely blocked during that window, but root (router/ISP/firewall/filter) still **UNKNOWN**.
+4. Remote verified IPv6 curl with exact body => external TLS SNI + HTTPS static endpoint PASS **for that specific source and window**, not public certificate trust. If it times out, verify that remote client has IPv6 and test window is active.
+5. Failed provider positive control => script exits before public exposure; no negative claim about laptop ingress.
+
+**Hard STOP:** no fourth ACME test, no router access, no Tunnel/Render/Work, no dynv6 API token, no blanket firewall allowance, no public MCP/CDP route. Review the new Windows CI before proposing any native run.
+
+Sources: [TCPData documented IPv6 port-check API](https://tcpdata.com/docs/port-check) and [Check-Host multi-node TCP API](https://check-host.net/about/api). Check-Host node ASN/IPv6 support is verified at runtime; not assumed from provider documentation.
+
 ## Trial #2: externally sourced IPv6 check (2026-11-15)
 
 **Observed trial #1:** laptop's test Caddy listener and exact scoped ActiveStore firewall rule started, then cleaned up with postcheck zero. However, mobile 5G could not reach the URL. A later human screenshot from test-ipv6.com showed mobile IPv6 **UNAVAILABLE / 0-of-10 readiness**. The phone cannot serve as an IPv6 inbound test client; router/ISP ingress is still **UNVERIFIED**, not blocked.
