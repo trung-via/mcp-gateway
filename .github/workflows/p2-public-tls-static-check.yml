@@ -39,7 +39,7 @@ jobs:
             'if (-not $CheckBindOnly -and -not $ApprovePublicACME)',
             'issuer acme',
             'disable_http_challenge',
-            'bind [$ipv6]',
+            'bind $ipv6',
             'skip_install_trust',
             'admin off',
             'New-NetFirewallRule -PolicyStore ActiveStore',
@@ -48,6 +48,9 @@ jobs:
             '-LocalAddress $ipv6',
             '-LocalPort 443',
             '[switch] $CheckBindOnly',
+            'CADDY_HTTP_IPV6_LISTENER=PASS',
+            'CADDY_ACME_BIND_HOST_RAW_IPV6=PASS',
+            "PSObject.Properties['bind_host']",
             'CADDY_BIND_IPV6_HOST_ONLY=PASS',
             'PUBLIC_ACME_CA_CONTACT=NO',
             'NO_FIREWALL_CHANGE=YES',
@@ -63,8 +66,23 @@ jobs:
             throw 'FORBIDDEN_STATIC_ONLY_DIRECTIVE'
           }
           # Regression: tls-alpn's embedded listener cannot use network/host as a bind host.
-          if ($code -match '(?m)^\s*bind\s+(tcp6/|tcp4/|tcp/|0\.0\.0\.0|\[::\])') {
+          if ($code -match '(?m)^\s*bind\s+(tcp6/|tcp4/|tcp/|0\.0\.0\.0|\[|::)') {
             throw 'ACME_TLS_ALPN_BIND_HOST_PREFIX_REGRESSION'
+          }
+          if ($code -notmatch '(?m)^\s*bind\s+\$ipv6\s*
+              $code.IndexOf('if ($CheckBindOnly)') -ge $code.IndexOf('$process = Start-Process')) {
+            throw 'READONLY_PREFLIGHT_MUST_EXIT_BEFORE_STARTING_CADDY'
+          }
+          if (-not $watch.Contains('ExpectedConfigPath') -or -not $watch.Contains('Remove-NetFirewallRule')) {
+            throw 'WATCHDOG_CLEANUP_MISSING'
+          }
+          Write-Output 'P2_PUBLIC_TLS_STATIC_SECURITY_MARKERS_PASS'
+) {
+            throw 'RAW_IPV6_HOST_REQUIRED_FOR_ACME_BIND'
+          }
+          if ($code.IndexOf('CADDY_ACME_BIND_HOST_RAW_IPV6=PASS') -ge $code.IndexOf('if ($CheckBindOnly)') -or
+              $code.IndexOf("PSObject.Properties['bind_host']") -lt 0) {
+            throw 'ACME_BIND_HOST_MUST_BE_CHECKED_BEFORE_READONLY_PASS'
           }
           if ($code.IndexOf('if ($CheckBindOnly)') -lt 0 -or
               $code.IndexOf('if ($CheckBindOnly)') -ge $code.IndexOf('$process = Start-Process')) {
