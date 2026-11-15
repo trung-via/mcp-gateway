@@ -1,5 +1,7 @@
 # MCP Gateway — canonical Work Tree
 
+**Latest HostOps 2026-11-15:** Owner switched dedicated MCP Gateway HostOps to **Public** repo [`trung-via/mcp-gateway-hostops`](https://github.com/trung-via/mcp-gateway-hostops), separate from AI Commerce. [Bootstrap PR #1 merged](https://github.com/trung-via/mcp-gateway-hostops/pull/1), exact main `ed3b6fc8aa495a1625495ed754c87e9180c6b256`; Windows hosted CI PR/main PASS. Negative [Issue #2 → run #43686329911](https://github.com/trung-via/mcp-gateway-hostops/actions/runs/43686329911) proved owner-gate DENY and native job SKIPPED. Runner Settings reports **none configured**: `MCP_HOSTOPS_NATIVE_ROUTE=BLOCKED_NO_RUNNER`. [ADR-0004](adr/0004-public-hostops-authorization.md) supersedes the earlier private visibility decision. No native or public TLS proof.
+
 Reconciled: **2026-11-14**. Canonical source: [`trung-via/mcp-gateway`](https://github.com/trung-via/mcp-gateway) on `main`. Read current GitHub Issue/PR/CI before claiming any newer status.
 
 ## Verified records
