@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## ACME TLS-ALPN bind-host root cause confirmed and PR #8 repaired — 2026-11-15
+
+**Native laptop diagnosis (USER_LIVE log):** ACME production/staging accounts were registered; `http.acme_client` started TLS-ALPN-01 challenge, but `tls.obtain` failed at `presenting with embedded solver` because it attempted a **malformed TCP listen address missing a port**, derived from original `bind tcp6/[$ipv6]`. The site server did bind IPv6/443, but the embedded ACME solver's **bind host** could not accept the `tcp6/` network-prefixed representation in the observed Caddy runtime. **Root cause CONFIRMED: gateway Caddyfile bind-host construction, not upstream router/ISP and not CA authorization reject**. First-time missing ACME account file is informational; accounts were successfully registered. Caddy source: https://caddyserver.com/docs/caddyfile/directives/bind .
+
+**Exact PR repair:** [PR #8](https://github.com/trung-via/mcp-gateway/pull/8) updated to **`bind [$ipv6]` (host only)** while keeping exact selected global IPv6 TCP443, TLS-ALPN-01 only, static-only response, scoped Windows Private ActiveStore rule and independent cleanup watchdog. Added **`-CheckBindOnly`** no-CA/no-firewall path: local Caddy `adapt` parse and exact adapted listener check; expected `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `PUBLIC_ACME_CA_CONTACT=NO`, `NO_FIREWALL_CHANGE=YES`. CI regression rejects `bind tcp6/` and requires read-only branch before Caddy start.
+
+**[Windows CI #43664753050](https://github.com/trung-via/mcp-gateway/actions/runs/43664753050) PASS** on PR #8 updated head `382e7882ffd3a72c8f2954c204c7312c6985e624` (PS7 AST + static safety only). **Windows no-CA `-CheckBindOnly` NOT YET EXECUTED**, repaired ACME issuance NOT YET ATTEMPTED. User already confirmed **post-cleanup 443 listeners=0, temp ACME rules=0**. No public MCP, cert, DNS plugin or CDP exposure.
+
+**Next:** user fetches updated PR #8 branch pinned to reviewed head, runs `-CheckBindOnly` (NO `-ApprovePublicACME`), provides output. Only after live preview PASS consider a **separately scoped retry authorization**, because the first approved CA attempt already contacted production and staging. Avoid automatic retries and certificate rate limits. Router login remains unavailable/unneeded; no Tunnel/Render/Work.
+
 ## Public ACME certificate trust attempt #1 unverified — 2026-11-15
 
 **Owner USER_LIVE Windows evidence from approved PR #8**:
