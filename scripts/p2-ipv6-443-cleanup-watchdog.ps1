@@ -28,8 +28,7 @@ try {
 try {
     $p = Get-CimInstance Win32_Process -Filter "ProcessId=$CaddyPid" -ErrorAction SilentlyContinue
     if ($p -and $p.ExecutablePath -and $p.CommandLine) {
-        $sameExe = [System.IO.Path]::GetFullPath($p.ExecutablePath) -ieq
-            [System.IO.Path]::GetFullPath($ExpectedExe)
+        $sameExe = ([System.IO.Path]::GetFullPath($p.ExecutablePath) -ieq [System.IO.Path]::GetFullPath($ExpectedExe))
         $sameConfig = $p.CommandLine.Contains($ExpectedConfigPath)
         if ($sameExe -and $sameConfig) {
             Stop-Process -Id $CaddyPid -Force -ErrorAction SilentlyContinue
