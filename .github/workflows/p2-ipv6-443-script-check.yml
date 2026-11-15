@@ -57,6 +57,10 @@ jobs:
             "MCP_BACKEND_EXPOSED=NO",
             "New-NetFirewallRule",
             "Remove-NetFirewallRule",
+            "[switch] $UseTcpDataIPv6Probe",
+            "LOCAL_IPV6_HTTPS_STATIC=PASS",
+            "REMOTE_IPV6_TCPDATA_STATUS=",
+            "ipv6.google.com",
             "finally"
           )
           foreach ($marker in $mandatory) {
@@ -66,6 +70,12 @@ jobs:
           }
           if ($main -match '(?m)^\s*reverse_proxy\b|Start-Process.*CDP|Set-NetFirewallProfile|netsh.*firewall') {
             throw "UNEXPECTED_UNBOUNDED_OR_PROXY_EFFECT"
+          }
+          if ($main.IndexOf("ipv6.google.com") -ge $main.IndexOf('New-NetFirewallRule')) {
+            throw "IPV6_REMOTE_CONTROL_MUST_BE_PREFLIGHT_BEFORE_FIREWALL"
+          }
+          if (-not $main.Contains('if ($UseTcpDataIPv6Probe)')) {
+            throw "REMOTE_CHECK_MUST_REQUIRE_EXPLICIT_OPT_IN"
           }
           if (-not $guard.Contains('Remove-NetFirewallRule') -or
               -not $guard.Contains('ExpectedConfigPath')) {
