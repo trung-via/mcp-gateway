@@ -28,7 +28,7 @@ git show "FETCH_HEAD:scripts/p2-ipv6-443-temporary-probe.ps1" |
 git show "FETCH_HEAD:scripts/p2-ipv6-443-cleanup-watchdog.ps1" |
     Set-Content -Encoding utf8 -Path (Join-Path $testDir "p2-ipv6-443-cleanup-watchdog.ps1")
 
-& (Join-Path $testDir "p2-ipv6-443-temporary-probe.ps1") -Hostname "trung-mcp.dynv6.net" -DurationSeconds 180
+& (Join-Path $testDir "p2-ipv6-443-temporary-probe.ps1") -Hostname "your-hostname.dynv6.net" -DurationSeconds 180
 ~~~~
 
 Preflight checks: Wi-Fi Private with IPv6 Internet, effective firewall default inbound Block, a single preferred Link-origin IPv6, matching dynv6 public AAAA, and NO pre-existing TCP443 listener. Script also requires working Caddy and PowerShell 7. If checks fail, no firewall allow is created.
@@ -46,7 +46,7 @@ CLEANUP=Automatic at end; independent expiry failsafe armed
 
 During the 180-second window, turn OFF Wi-Fi on a mobile phone, use an IPv6-capable cellular data connection, and open the exact URL:
 
-https://trung-mcp.dynv6.net/__mcp_p2_ipv6_ingress_probe
+https://your-hostname.dynv6.net/__mcp_p2_ipv6_ingress_probe
 
 An untrusted certificate warning is EXPECTED because this is deliberately not a production certificate. If browser permits proceeding for this test ONLY, the desired page body is:
 
