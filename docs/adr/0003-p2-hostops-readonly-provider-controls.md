@@ -1,28 +1,33 @@
-# ADR-0003 (PROPOSED): Narrow P2 HostOps checker-control exception
+# ADR-0003 (PROPOSED): Private HostOps transport for bounded P2 provider control
 
-Status: **PROPOSED — source candidate only, NOT an active HostOps permission**
+Status: **PROPOSED — source only, NO HostOps runtime authority**
 Date: 2026-11-15
-Related: [GATEWAY-P2-HOSTOPS-001 Issue #9](https://github.com/trung-via/mcp-gateway/issues/9), [ADR-0002](0002-mcp-mvp-security-and-evidence.md).
+Related: [Issue #9](https://github.com/trung-via/mcp-gateway/issues/9), [ADR-0002](0002-mcp-mvp-security-and-evidence.md).
 
 ## Context
 
-ADR-0002 disallows Windows execution as part of the public MCP P1/P2 tool surface. The owner subsequently requested that MCP Gateway's IPv6 checker diagnostics be run via HostOps rather than manual Human PowerShell. The new request does **not** authorize public MCP callers or untrusted issues to execute Windows commands.
+ADR-0002 denies arbitrary Windows execution in the public MCP P1/P2 tool surface. The owner additionally requested read-only IPv6 checker diagnostics via HostOps without manual Human PowerShell. This is a narrowly scoped internal diagnostic request, not a grant to ChatGPT MCP clients, generic GitHub Issues, AI Commerce HostOps or untrusted code.
 
-## Proposed boundary
+The canonical MCP Gateway GitHub repository is public. GitHub warns against attaching self-hosted runners to public repositories because untrusted PR/workflow code can compromise the native machine. This remains a threat even when an individual workflow attempts to gate issue_comment triggers: the runner's broader repository scope must be considered.
 
-A dedicated source-registered, operator-initiated, **zero-argument** HostOps *internal* diagnostic may call only third-party public positive controls for ipv6.google.com:443. It does not add any MCP tool, Windows adapter, public remote command surface, or ongoing background daemon.
+Source: https://docs.github.com/en/actions/reference/security/secure-use
 
-GitHub event identity (actor and issue) selects the fixed diagnostic but is not itself permission to issue arbitrary commands. A separately verified Windows HostOps runner with access to the specific repository and the reviewed operation must enforce its own native policy. The source is checked out from the trusted default branch; untrusted PR code never runs on this self-hosted runner.
+## Proposed separation
 
-All network controls and resulting public receipts are bounded/redacted. Internal HostOps activity and CI evidence are never conflated with a live ChatGPT MCP call.
+Public MCP Gateway repo owns ONLY:
+- The fixed zero-argument PowerShell 7 source for checking TCPData and Check-Host against public ipv6.google.com:443.
+- A machine-readable allowlist contract, offline mocked tests, non-native GitHub-hosted CI, architecture and sanitized public receipt schema.
+- No self-hosted runner reference or native issue-comment workflow.
 
-## Merge and runtime acceptance
+A separately approved **private HostOps execution transport** owns:
+- Native runner registration, authentication, operation allowlist and exact SHA-pinned source ingestion.
+- Invocation of this single operation under a non-administrative Windows identity with bounded network-only effects.
+- Sanitized, correlated receipt transport back to MCP Gateway Issue #9. No raw runner logs, user IP, local paths or credentials in public.
 
-Before promoting beyond PROPOSED:
-1. Review exact head and hosted CI/fixture results for allowlist, fail-closed and trigger restrictions.
-2. Independently verify the Windows runner identity, label, repository access, execution policy and sanitized native receipt route.
-3. Authorize a single bounded diagnostic invocation; check native receipt separately from Issue creation and GitHub workflow acknowledgment.
+This must not silently reuse or modify AI Commerce HostOps; a cross-project adapter, if desired, needs its own authority and code review. A source PR is not a registered operation or native effect.
 
-If missing, stay BLOCKED_NO_NATIVE_ROUTE. Do not change AI Commerce HostOps contracts implicitly or ask Human to run ad hoc scripts as a substitute.
+## Acceptance
 
-This does NOT supersede ADR-0002 for MCP client tools, P2 exposure, authentication or project authorization; it proposes one internal HostOps exception contingent on the above gates.
+Before this proposal can become an accepted and operating contract: independently review source/CI, select and authorize the private transport (new dedicated private infrastructure vs existing explicitly approved private HostOps), establish native runner identity and exact repository/operation grants, and obtain one genuine completed native receipt. Failure of any gate is BLOCKED_NO_REGISTERED_PRIVATE_HOSTOPS; do not ask Human to execute PowerShell instead.
+
+No public inbound 443, firewall changes, Caddy, DNS, ACME, MCP/CDP exposure, tunneling or unrestricted machine rights are authorized by this ADR.
