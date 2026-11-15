@@ -1,0 +1,111 @@
+name: MCP Gateway HostOps P2 IPv6 controls (read-only)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: mcp-gateway-p2-hostops-readonly
+  cancel-in-progress: false
+
+jobs:
+  p2-provider-control:
+    # The public issue body is never an instruction. Only this exact authenticated
+    # owner command on the fixed internal tracking issue may reach the runner.
+    if: >-
+      github.repository == 'trung-via/mcp-gateway' &&
+      github.event.issue.number == 9 &&
+      github.actor == 'trung-via' &&
+      github.event.comment.body == '/mcp-gateway-hostops-p2-readonly-v1'
+    runs-on: [self-hosted, Windows, mcp-gateway-hostops]
+    timeout-minutes: 3
+    steps:
+      - name: Checkout trusted main (never untrusted PR code)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Run the fixed control only and validate sanitized receipt
+        id: controls
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            $path = Join-Path $env:GITHUB_WORKSPACE 'scripts/hostops/p2-ipv6-provider-controls-readonly.ps1'
+            $lines = @(& $path)
+            $prefix = 'MCP_P2_HOSTOPS_RECEIPT_V1='
+            if ($lines.Count -ne 1 -or -not ([string]$lines[0]).StartsWith($prefix)) {
+              throw 'BAD_RECEIPT_COUNT'
+            }
+            $json = ([string]$lines[0]).Substring($prefix.Length)
+            $receipt = $json | ConvertFrom-Json -ErrorAction Stop
+            if ($receipt.schema -ne 'MCP_P2_HOSTOPS_RECEIPT_V1' -or
+                $receipt.operation -ne 'MCP_P2_IPV6_PROVIDER_CONTROL_READONLY_V1' -or
+                $receipt.status -notin @('CONTROLS_BLOCKED','CONTROLS_PASS') -or
+                $receipt.tcpdata_status -notin @('OPEN','CLOSED','TIMEOUT','PROVIDER_ERROR') -or
+                $receipt.checkhost_status -notin @('PROVIDER_ERROR','RESULTS_CLASSIFIED')) {
+              throw 'BAD_RECEIPT_SCHEMA'
+            }
+            $allowed = @(
+              'schema','operation','utc','status','tcpdata_status','tcpdata_error',
+              'checkhost_status','checkhost_error','checkhost_selected_nodes',
+              'checkhost_ipv6_nodes','checkhost_ipv4_nodes','checkhost_error_nodes',
+              'checkhost_pending_nodes','checkhost_schema_nodes','checkhost_distinct_asns'
+            )
+            foreach ($field in $receipt.PSObject.Properties.Name) {
+              if ($field -notin $allowed) { throw 'UNAUTHORIZED_RECEIPT_FIELD' }
+            }
+            foreach ($field in @(
+              'checkhost_selected_nodes','checkhost_ipv6_nodes','checkhost_ipv4_nodes',
+              'checkhost_error_nodes','checkhost_pending_nodes','checkhost_schema_nodes',
+              'checkhost_distinct_asns'
+            )) {
+              $value = $receipt.PSObject.Properties[$field].Value
+              if ($value -isnot [int] -or $value -lt 0 -or $value -gt 8) {
+                throw 'UNAUTHORIZED_COUNT'
+              }
+            }
+            if ($receipt.tcpdata_error -notmatch '^(NONE|TCPDATA_(REQUEST|HTTP|SCHEMA)_FAILED)$' -or
+                $receipt.checkhost_error -notmatch '^(NONE|CHECKHOST_(START_REQUEST|START_SCHEMA|RESULT_REQUEST|RESULT_SCHEMA)_FAILED)$') {
+              throw 'BAD_ERROR_CATEGORY'
+            }
+            "receipt=$json" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            Write-Output 'MCP_HOSTOPS_RECEIPT_VALIDATED=PASS'
+          }
+          catch {
+            # Do not print the failing raw payload or host-local execution paths.
+            throw 'MCP_HOSTOPS_RECEIPT_DENIED'
+          }
+
+      - name: Publish sanitized native control receipt on Issue 9
+        uses: actions/github-script@v7
+        env:
+          RECEIPT_JSON: ${{ steps.controls.outputs.receipt }}
+        with:
+          script: |
+            const raw = process.env.RECEIPT_JSON || '';
+            const receipt = JSON.parse(raw);
+            const body = [
+              '## MCP Gateway HostOps native read-only provider control',
+              'Operation: MCP_P2_IPV6_PROVIDER_CONTROL_READONLY_V1',
+              'Source SHA: ' + context.sha,
+              'Workflow run: https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId,
+              '',
+              'Sanitized native receipt (no laptop IP, local paths or provider raw JSON):',
+              '~~~json',
+              JSON.stringify(receipt, null, 2),
+              '~~~',
+              '',
+              'This is a public-provider positive control, NOT a public laptop ingress or ChatGPT MCP proof.'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 9,
+              body
+            });
