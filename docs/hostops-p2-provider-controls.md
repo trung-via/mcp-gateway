@@ -1,53 +1,50 @@
-# P2 HostOps read-only IPv6 provider controls
+# P2 HostOps IPv6 provider controls — private execution transport required
 
-Status: **SOURCE CANDIDATE ONLY** in Issue [#9](https://github.com/trung-via/mcp-gateway/issues/9). Not yet installed or executed on the laptop.
+Status: **SOURCE ONLY / NOT REGISTERED / NO NATIVE EFFECT**.
+Related: [Issue #9](https://github.com/trung-via/mcp-gateway/issues/9), [draft PR #10](https://github.com/trung-via/mcp-gateway/pull/10), [PR #7](https://github.com/trung-via/mcp-gateway/pull/7).
 
-## Why this exists
+## Purpose and current evidence
 
-The one-time non-CA multi-source laptop test at [PR #7](https://github.com/trung-via/mcp-gateway/pull/7) stopped before ingress because its remote positive controls were unavailable. A separate read-only human Windows run returned Check-Host selected=8, IPv6 success=0, distinct ASN=0. That result does not prove anything about inbound router/ISP filtering.
+The approved PR #7 one-time multi-source ingress attempt failed CLOSED during public provider preflight. Laptop port 443 and temporary firewall postcheck were 0/0, cleanup PASS. A subsequent manually relayed read-only public Check-Host control selected eight nodes but produced zero verifiable IPv6 node successes and zero distinct ASNs. This is **not** a router/ISP negative.
 
-The owner instructed the project to use HostOps for further checks, with no more Human-run PowerShell diagnostics.
+Owner directed MCP Gateway to use HostOps and not ask Human to run or relay any more PowerShell checks.
 
-## Operation and risk boundaries
+## Explicit operation contract
 
-- Exact operation: MCP_P2_IPV6_PROVIDER_CONTROL_READONLY_V1; **zero arguments**.
-- Exact external test target: public ipv6.google.com:443, checked by TCPData and Check-Host. Provider HTTPS API connections themselves may disclose the outbound public source IP to those providers, as with any HTTP request. No user hostname or laptop destination IPv6 is placed in the request query.
-- Never accept arbitrary Issue body commands, URLs, scripts, file paths or user IP addresses. No Windows host inventory, local listening, DNS mutation, firewall changes, router access, Caddy/ACME, certificate writes, MCP/CDP adapter access or tunneling.
-- Timeout and work bounds: TCPData 12 sec max; Check-Host start 8 sec max; up to six result polls with 5 sec max each; at most 8 nodes. Workflow runtime <=3 minutes.
-- One machine-readable result line (MCP_P2_HOSTOPS_RECEIPT_V1) contains only enums/counts, timestamp and non-sensitive error stages. No raw provider JSON, returned destination addresses, node metadata, tokens, IPs, local paths or secrets.
-- All public receipts must be validated against the allowlisted JSON schema before the GitHub issue comment is created.
+Source: scripts/hostops/p2-ipv6-provider-controls-readonly.ps1
+Machine-readable contract: contracts/hostops/mcp-p2-ipv6-provider-control.v1.json
 
-## Source-owned trigger and runner authority
+- Exact zero-argument operation MCP_P2_IPV6_PROVIDER_CONTROL_READONLY_V1.
+- Only fixed public positive-control target ipv6.google.com:443 via TCPData/Check-Host. Providers may observe outbound source IP as an inherent property of HTTPS traffic, but the script never sends the laptop IPv6/hostname as the query target.
+- At most 8 Check-Host nodes, 6 bounded result polls; classify remote IPv6/IPv4, errors, pending and malformed schema. Do not reinterpret zero nodes as a negative host ingress proof.
+- Script outputs one sanitized MCP_P2_HOSTOPS_RECEIPT_V1 line. No raw response JSON, IP addresses, node identities, personal paths, usernames, tokens or secrets.
+- No argument for arbitrary URL, IP, command, filesystem path or process; no Windows host inventory, Caddy, listener, Windows firewall, router access, ACME, DNS, MCP, CDP or private project data.
 
-Workflow: .github/workflows/p2-hostops-provider-controls-readonly.yml.
+## Security: NEVER attach a self-hosted laptop runner directly to this public repository
 
-A job may be queued **only** for:
-- GitHub event issue_comment.created on **Issue #9** of repo trung-via/mcp-gateway;
-- authenticated actor **trung-via**;
-- exact body: /mcp-gateway-hostops-p2-readonly-v1.
+GitHub explicitly cautions that self-hosted runners are generally unsuitable for public repositories because forked or untrusted code may compromise the machine and runner environment:
 
-The job executes checkout of **main** (not a PR head) on a dedicated Windows self-hosted runner with the exact custom label **mcp-gateway-hostops**. The runner must be verified as belonging to and being authorized for this repository; a runner attached only to AI Commerce is NOT implicitly available. GitHub-hosted windows-latest CI tests source and mocked provider responses only, and must not be treated as native laptop evidence.
+- https://docs.github.com/en/actions/reference/security/secure-use
+- https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners
 
-**Do not send the trigger comment until ALL gates below pass:**
-1. Independent review and merge of the approved PR source into main.
-2. Owner/Engineering independently verifies a registered, online, correctly scoped laptop Windows runner with the mcp-gateway-hostops label and exact repository access. Never silently reconfigure or share AI Commerce HostOps runner.
-3. The Windows host's execution policy and egress allow the reviewed script; do not bypass a managed policy, alter security controls, or request secrets. A failing gate is BLOCKED.
-4. Request provenance/authorization and expected effect are explicitly reconciled; issue/comment activity is not proof of runner execution.
+The initial draft proposal to use a public-repo issue_comment-triggered self-hosted Windows runner was **REMOVED BEFORE MERGE** after security review. Source-only Windows CI on github-hosted windows-latest is allowed; it never contacts the laptop or a real external provider.
 
-A result is LIVE only after the Actions run shows the selected self-hosted runner executed the fixed script and Issue #9 received a validated, sanitized receipt referencing that run and source SHA. If no registered runner exists, status remains BLOCKED_NO_NATIVE_ROUTE. Repeated trigger attempts do not prove success.
+The authorized native path must be a separately secured, **private, owner-controlled HostOps execution transport** with its own checked source registration and least-privilege Windows runner, or an independently reviewed bounded adapter in an already trusted private HostOps service. **Do not silently reuse AI Commerce HostOps** or expand its standing read operation, which is not an arbitrary network shell.
 
-## Source validation
+## Gate to a real HostOps measurement
 
-Offline Windows-hosted tests (no provider network, no laptop contact):
-- tests/hostops/test-p2-provider-controls.ps1
-- .github/workflows/p2-hostops-source-ci.yml
+A live diagnostic may begin only after all gates are proven:
+1. Private execution-transport ownership, runner registration, repo access and process identity verified independently. A public GitHub issue or PR alone is not dispatch.
+2. Exact zero-argument operation registered and pinned to reviewed script SHA. Private dispatcher authenticates caller and enforces allowlisted operation, not prompt text or arbitrary GitHub Issue commands.
+3. Host native policy admits the reviewed, non-elevated read-only script; no policy bypass, new credentials or unrestricted host grants.
+4. Sanitized signed/correlated request and completed native receipt flow back to Issue #9, including run/job identifier, source SHA and enum-only public fields. Do not publish raw runner paths or network results.
+5. No automatic IPv6/443 ingress trial, firewall change or fourth ACME attempt follows this control result.
 
-Cases include positive two distinct IPv6 ASNs and negative same ASN / IPv4-only / provider timeout / request failure / response schema failure / pending node. Static deny tests cover process, firewall, DNS, remote command and dynamic execution primitives.
+Until a private HostOps transport has been **actually** registered, status is BLOCKED_NO_REGISTERED_PRIVATE_HOSTOPS. Brain must not ask Human to run PowerShell as a fallback.
 
-## Interpretation
+## Source-only CI
 
-- CONTROLS_PASS: TCPData public IPv6-only control OPEN **and** >=2 Check-Host IPv6-success nodes from distinct ASNs. This only establishes checker viability in that time window, not laptop ingress.
-- CONTROLS_BLOCKED: at least one prerequisite fails or is inconclusive; inspect sanitized per-provider category before revising provider selection. No ingress test follows automatically.
-- Public IPv6 TCP443 ingress, public certificate trust and ChatGPT MCP tools all remain separate unverified acceptance objectives.
+- tests/hostops/test-p2-provider-controls.ps1 (offline mocks only)
+- .github/workflows/p2-hostops-source-ci.yml (GitHub-hosted Windows; denies native self-hosted triggers in this public repository)
 
-This HostOps diagnostic does NOT authorize another static ingress or Let's Encrypt attempt.
+Success of these proves CODE/TEST only, not Windows native runtime. Public laptop ingress, public CA trust and normal ChatGPT MCP tool invocation are separate evidence objectives.
