@@ -79,7 +79,7 @@ function Read-Fixture {
 
 $r = Read-Fixture 'two_ipv6_asns'
 if ($r.status -ne 'CONTROLS_PASS' -or $r.checkhost_distinct_asns -ne 2 -or $r.checkhost_ipv6_nodes -ne 2) {
-    throw 'TWO_ASNS_POSITIVE_FAILED'
+    throw ('TWO_ASNS_POSITIVE_FAILED RECEIPT=' + ($r | ConvertTo-Json -Compress -Depth 3))
 }
 $r = Read-Fixture 'same_asn'
 if ($r.status -ne 'CONTROLS_BLOCKED' -or $r.checkhost_distinct_asns -ne 1 -or $r.checkhost_ipv6_nodes -ne 2) {
