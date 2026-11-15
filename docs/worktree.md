@@ -67,6 +67,24 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Windows raw IPv6 ACME bind_host check PASS — 2026-11-15
+
+**USER_LIVE native Windows PowerShell witness:** operator fetched pinned [PR #8](https://github.com/trung-via/mcp-gateway/pull/8) commit `bf60dc6c8ba3d2b7bc4bcce12c733c0dfcf50f90` and ran the non-public-CA `-CheckBindOnly` preflight:
+
+```text
+CADDY_HTTP_IPV6_LISTENER=PASS
+CADDY_ACME_BIND_HOST_RAW_IPV6=PASS
+CADDY_BIND_IPV6_HOST_ONLY=PASS
+PUBLIC_ACME_CA_CONTACT=NO
+NO_FIREWALL_CHANGE=YES
+```
+
+**Acceptance:** `ACME_RAW_BIND_HOST_PREFLIGHT_PASS / USER_LIVE`. The local Caddy adapted HTTP TCP443 listen address was accepted **and** issuer `challenges.bind_host` was confirmed to be selected **raw unbracketed global IPv6**. This closes the ACME-field verification gap behind the previous two `missing port in address` errors. The dry-run returned **before** starting public Caddy, opening Windows Firewall or calling the CA. No new public certificate or CT record from this dry-run.
+
+**CI precision:** PR branch raw IPv6 script and raw ACME challenge guard verified CODE; [MCP protocol CI #43667100706](https://github.com/trung-via/mcp-gateway/actions/runs/43667100706) SUCCESS at above head. Previous [PS7 AST/static check #43666748884](https://github.com/trung-via/mcp-gateway/actions/runs/43666748884) SUCCESS at script change commit `1f56fe7`, but a new dedicated PS7 static-safety run covering the subsequently revised workflow was **not independently confirmed**; do not claim new-workflow CI PASS.
+
+**State boundary:** `PUBLIC_TLS_TRUST=UNVERIFIED`; TLS-ALPN runtime behavior not yet observed for corrected unbracketed bind; ChatGPT IPv6-only public endpoint and `gateway_health` actual call not proven. The first two ACME test authorizations have been used; **new explicit one-off permission** is needed before another real public-CA TLS-ALPN-01 trial (max 300sec, static-only, exact IPv6 TCP443, Caddy-scoped Private ActiveStore firewall, watchdog, normal rollback). No unlimited retries, no public MCP/CDP, router login, port80, DNS token, Tunnel/Render/Work.
+
 ## ACME TLS-ALPN DOUBLE-BRACKET bind_host RCA from second live stderr — 2026-11-15
 
 **USER_LIVE second-attempt native Caddy stderr:** while corrected `bind [$ipv6]` gave `CADDY_BIND_IPV6_HOST_ONLY=PASS` for the *HTTP* listener, the ACME TLS-ALPN embedded solver failed to create its independent listener: **`could not start listener for challenge server ... listen tcp: address [[<IPV6>]]... missing port in address`** (multiple production and staging issuer attempts). This is not a CA authorization rejection or network route test; it is a local ACME `bind_host` text-format failure. Caddy formatting and admin-disabled warnings are noncausal. After the 300-second trial, independent Windows postcheck **`PORT443_LISTENERS=0` / `ACME_TEST_RULES=0`** verified full rollback.
