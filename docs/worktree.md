@@ -67,6 +67,16 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Approved single public ACME TLS-ALPN-01 retry #2 — awaiting operator Windows live proof
+
+**OWNER AUTHORIZATION / 2026-11-15:** after native Caddy `-CheckBindOnly` no-CA/no-firewall PASS, user explicitly approved **exactly ONE further 300-second** public CA ACME TLS-ALPN-01 test, with consent to previously disclosed CT transparency/persistent Caddy certificate material. This is not open-ended retry permission. No Windows run was performed by ChatGPT tools; the next action requires operator's elevated PowerShell 7 on laptop.
+
+**Pinned source:** [PR #8](https://github.com/trung-via/mcp-gateway/pull/8) branch `p2/trusted-tls-alpn-01-static-probe-20261115`, known reviewed head `382e7882ffd3a72c8f2954c204c7312c6985e624`; script corrected to `bind [$ipv6]` (host-only). [PS7 static-safety CI #43664753050](https://github.com/trung-via/mcp-gateway/actions/runs/43664753050) PASS, [MCP CI #43664753051](https://github.com/trung-via/mcp-gateway/actions/runs/43664753051) PASS. The operator will reject a mismatched fetched Git SHA.
+
+**Boundaries:** `-ApprovePublicACME -DurationSeconds 300`; test Caddy only serves fixed response at `/__mcp_p2_public_tls_probe`, does not proxy to MCP/CDP/Windows, binds only selected global IPv6 443, scoped temporary Windows Private ActiveStore allow and independent +30-second watchdog. No router login, HTTP80, DNS plugin, dynv6 token, Tunnel/Render/Work. Real CA issuance may persist ACME key/certificate; no CA contact yet in current user message.
+
+**Evidence to accept:** `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `PUBLIC_TLS_TRUST=PASS_VALIDATED_WITHOUT_INSECURE`, `FIREWALL_TEST_RULE=REMOVED`, `TEMP_CADDY=STOPPED`, postcheck TCP443 listeners 0 / temporary firewall rules 0. If unverified after one attempt, DO NOT RETRY: inspect redacted local Caddy stderr. Public trusted TLS still `UNVERIFIED`, ChatGPT IPv6-only cloud reachability and tool invocation still `UNVERIFIED`.
+
 ## Windows no-CA bind preflight of repaired PR #8 PASS — 2026-11-15
 
 **USER_LIVE operator Windows PowerShell output** after fetching PR #8 reviewed branch head `382e7882ffd3a72c8f2954c204c7312c6985e624` and invoking `p2-public-tls443-static-probe.ps1 -CheckBindOnly`:
