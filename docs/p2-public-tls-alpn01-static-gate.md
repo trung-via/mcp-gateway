@@ -9,13 +9,13 @@ Status: SOURCE ONLY / PUBLIC CERTIFICATE NOT ISSUED. GATEWAY-P0-004, Issue #2. T
 - Laptop MCP JSON-RPC initialize, initialized notification, gateway_health over private/loopback HTTPS already PASS. This does NOT prove the public trust chain or ChatGPT origin.
 - Existing Caddy command lacks optional dynv6 DNS module, but stock Caddy supports ACME TLS-ALPN-01 (public inbound 443 now has a positive test). No dynv6 update token required.
 
-## First live ACME attempt root cause and fail-closed repair — 2026-11-15
+## Historical: first ACME attempt fix (bracketed bind now SUPERSEDED) — 2026-11-15
 
 **USER_LIVE Windows run of PR #8 attempt #1**: Caddy selected global IPv6 TCP443 listener bound; Windows temporary Private ActiveStore allow rule ACTIVE; 300-second window expired and both Caddy and the rule cleaned up. `PUBLIC_TLS_TRUST=NOT_VERIFIED_WITHIN_WINDOW`. Independent follow-up confirmed **`PORT443_LISTENERS=0` and `ACME_TEST_RULES=0`**.
 
 **Root cause CONFIRMED from sanitized Caddy stderr**: ACME account registration succeeded; `http.acme_client` attempted TLS-ALPN-01 but `tls.obtain` failed when the embedded challenge solver tried creating a malformed address containing `tcp6/[<IPv6>]` as its **bind-host component**. Reported `missing port in address` occurred before any successful ACME validation. A second staging CA attempt failed the same way. This is a **local listener-address construction failure**, not evidence of router ingress block, insufficient IPv6 mobile access, CA rejection, CAA, invalid password, or dynv6 API module error. The initial missing `default.json` account file was an ordinary new-account state and subsequently `new ACME account registered`.
 
-**Repair in this PR**: replace `bind tcp6/[$ipv6]` with Caddy-documented **host-only** `bind [$ipv6]`, keeping the site address `https://<registered-hostname>` to supply TCP443. Caddy [bind docs](https://caddyserver.com/docs/caddyfile/directives/bind) specify a host/interface argument with port from the site address; the challenge solver must not receive a `tcp6/` network prefix as its host. Add PowerShell CI regression that rejects this prefix and a **no-CA `-CheckBindOnly`** preflight which reads the adapted Caddy JSON and rejects any listener other than exactly `[selected-ipv6]:443` (or its `tcp/` spelling).
+**Historical intermediate repair (SUPERSEDED by second-attempt diagnosis above)**: replaced `bind tcp6/[$ipv6]` with **bracketed** `bind [$ipv6]`, keeping the site address `https://<registered-hostname>` to supply TCP443. Caddy [bind docs](https://caddyserver.com/docs/caddyfile/directives/bind) specify a host/interface argument with port from the site address; the challenge solver must not receive a `tcp6/` network prefix as its host. Add PowerShell CI regression that rejects this prefix and a **no-CA `-CheckBindOnly`** preflight which reads the adapted Caddy JSON and rejects any listener other than exactly `[selected-ipv6]:443` (or its `tcp/` spelling).
 
 **Next safe test** (user laptop, elevated PowerShell 7): fetch the *newly reviewed PR #8 commit*, copy the script+watchdog, invoke:
 
@@ -23,7 +23,7 @@ Status: SOURCE ONLY / PUBLIC CERTIFICATE NOT ISSUED. GATEWAY-P0-004, Issue #2. T
 & (Join-Path $testDir 'p2-public-tls443-static-probe.ps1') -Hostname '<registered-hostname>' -CheckBindOnly
 ```
 
-Expected: `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `PUBLIC_ACME_CA_CONTACT=NO`, `NO_FIREWALL_CHANGE=YES`; **no Caddy listener is started and no public CA is contacted**, irrespective of previous certificate status. This is a read-only network preflight plus an inert local temporary Caddyfile write/parse. `-ApprovePublicACME` is NOT needed for `-CheckBindOnly`.
+Expected in the CURRENT unbracketed revision: `CADDY_HTTP_IPV6_LISTENER=PASS`, `CADDY_ACME_BIND_HOST_RAW_IPV6=PASS`, `CADDY_BIND_IPV6_HOST_ONLY=PASS`, `PUBLIC_ACME_CA_CONTACT=NO`, `NO_FIREWALL_CHANGE=YES`; **no Caddy listener is started and no public CA is contacted**, irrespective of previous certificate status. This is a read-only network preflight plus an inert local temporary Caddyfile write/parse. `-ApprovePublicACME` is NOT needed for `-CheckBindOnly`.
 
 **STOP**: do not immediately re-run ACME; review the new local preflight and latest CI result first. A new CA issuance attempt is a **separate retry** with potential rate limiting/CT effects and must be scoped explicitly; earlier approval of a single time-boxed attempt does not silently become authorization for unlimited attempts.
 
