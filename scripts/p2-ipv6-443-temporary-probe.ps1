@@ -23,7 +23,10 @@ param(
     [ValidateRange(60,240)]
     [int] $DurationSeconds = 180,
 
-    [string] $InterfaceAlias = "Wi-Fi"
+    [string] $InterfaceAlias = "Wi-Fi",
+
+    # Explicit opt-in; third-party checker sees the laptop IPv6 during the test.
+    [switch] $UseTcpDataIPv6Probe
 )
 
 Set-StrictMode -Version Latest
@@ -72,6 +75,35 @@ if ($ipv6 -notin $aaaa) {
 if (@(Get-NetTCPConnection -State Listen -LocalPort 443 -ErrorAction SilentlyContinue).Count -gt 0) {
     throw 'STOP: TCP 443 already has a listener. Do not interfere with it.'
 }
+
+# Remote checker preflight: prove the provider can reach a known IPv6-only
+# public HTTPS endpoint BEFORE opening any local test port. No host IP is sent
+# to the provider during this positive control.
+function Get-TcpDataPortStatus {
+    param([Parameter(Mandatory)][string] $Target)
+    $uri = "https://tcpdata.com/port?host=$([uri]::EscapeDataString($Target))&port=443"
+    $response = Invoke-WebRequest -Uri $uri -Headers @{ Accept = 'application/json' } -TimeoutSec 12 -ErrorAction Stop
+    if ($response.StatusCode -ne 200) { throw 'PROVIDER_BAD_HTTP_RESPONSE' }
+    $json = $response.Content | ConvertFrom-Json -ErrorAction Stop
+    $value = [string]$json.status
+    if ($value -notin @('open','closed','timeout')) {
+        throw 'PROVIDER_UNEXPECTED_RESPONSE_SCHEMA'
+    }
+    return $value
+}
+if ($UseTcpDataIPv6Probe) {
+    try {
+        $control = Get-TcpDataPortStatus -Target 'ipv6.google.com'
+    }
+    catch {
+        throw 'STOP: Third-party checker positive-control request failed. No listener or firewall change.'
+    }
+    if ($control -ne 'open') {
+        throw 'STOP: Third-party checker did not demonstrate IPv6 TCP443 access to known public control. No listener or firewall change.'
+    }
+    Write-Output 'REMOTE_IPV6_CHECKER_CONTROL=PASS'
+}
+
 
 $caddy = Get-Command caddy -CommandType Application -ErrorAction Stop | Select-Object -First 1
 $caddyPath = $caddy.Source
@@ -140,6 +172,31 @@ try {
     # ActiveStore avoids persistent rule across reboot. Exact IPv6 and Caddy only.
     $null = New-NetFirewallRule -PolicyStore ActiveStore -Name $ruleName -DisplayName 'MCP P2 TEMP IPv6 TCP 443 reachability probe' -Enabled True -Direction Inbound -Action Allow -Profile Private -Program $caddyPath -Protocol TCP -LocalPort 443 -LocalAddress $ipv6 -RemoteAddress Any
     $firewallCreated = $true
+
+    # Independent local-IPv6 HTTPS check on the test-only static endpoint.
+    # -k is strictly for this temporary internal CA; never for public MCP.
+    $curl = Get-Command curl.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1
+    $testUrl = "https://$Hostname$probePath"
+    $localResult = ((& $curl.Source --noproxy '*' --insecure --ipv6 --connect-timeout 2 --max-time 6 --resolve "${Hostname}:443:[$ipv6]" --silent $testUrl 2>$null) -join "`n").Trim()
+    if ($LASTEXITCODE -ne 0 -or $localResult -ne $probeBody) {
+        throw 'STOP: local static HTTPS response over selected global IPv6 failed; remote check cancelled.'
+    }
+    Write-Output 'LOCAL_IPV6_HTTPS_STATIC=PASS'
+
+    # This is a limited diagnostic from an independent external IPv6 source.
+    # TcpData documents IPv6 literal support but performs HTTPS on port 443:
+    # a non-open result may reflect TLS trust policy rather than only TCP.
+    # Never interpret timeout/closed by itself as a confirmed router block.
+    if ($UseTcpDataIPv6Probe) {
+        try {
+            $remote = Get-TcpDataPortStatus -Target $ipv6
+            Write-Output "REMOTE_IPV6_TCPDATA_STATUS=$($remote.ToUpperInvariant())"
+        }
+        catch {
+            Write-Output 'REMOTE_IPV6_TCPDATA_STATUS=INCONCLUSIVE_PROVIDER_ERROR'
+        }
+        Write-Output 'REMOTE_IPV6_TCPDATA_NOTE=Non-open results may include untrusted test TLS; not router proof'
+    }
 
     Write-Output 'TEMP_IPV6_443_LISTENER=BOUND'
     Write-Output 'FIREWALL_TEST_RULE=SCOPED_ACTIVE'
