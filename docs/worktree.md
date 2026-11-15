@@ -67,6 +67,18 @@ Human-provided Windows read-only metadata for two preferred global IPv6 candidat
 - Next bounded engineering preparation: locally scoped HTTPS reverse proxy on laptop (Caddy or equivalent), using `src.gateway.public_server` bound to `127.0.0.1` with exact `MCP_PUBLIC_HOSTNAME`; collect a real DNS name and decide how AAAA updates on prefix change. The P1 localhost `src.gateway.server` must not be exposed as raw HTTP. Limit to `gateway_health` until ChatGPT Chat tool-call verification.
 - Do **not** open IPv6 80/443, alter home-router firewall, publish full personal IPv6 addresses to the public repo, use Tunnel/Work or deploy Render without a scoped approval.
 
+## Public ACME certificate trust attempt #1 unverified — 2026-11-15
+
+**Owner USER_LIVE Windows evidence from approved PR #8**:
+- `TEMP_IPV6_443_LISTENER=BOUND`, `FIREWALL_TEST_RULE=SCOPED_ACTIVE`, `MCP_BACKEND_EXPOSED=NO`, `TLS_CERTIFICATE=PUBLIC_ACME_PENDING`, `WINDOW_SECONDS=300`, `ACME_CHALLENGE=TLS_ALPN_01_TCP443_ONLY`.
+- `PUBLIC_TLS_TRUST=NOT_VERIFIED_WITHIN_WINDOW`, `TEST_WINDOW=EXPIRED_OR_VERIFIED`.
+- Cleanup receipts `FIREWALL_TEST_RULE=REMOVED` and `TEMP_CADDY=STOPPED` observed. Independent no-listener/no-rule postcheck not yet submitted for this attempt.
+- **Classification**: `PUBLIC_TLS_TRUST_UNVERIFIED / USER_LIVE`; **NOT** `ACME_CA_REJECTED` and **NOT** a public trusted certificate PASS. Could be CA issue, ACME validation challenge/network path, issuance/storage timing, or local `curl.exe` result. Actual cause UNKNOWN pending Caddy process log (script suppresses curl stderr). Previous independent external IPv6 TCP443 OPEN remains valid as a separate network-path proof.
+
+**Next ONLY read-only actions** (no further certificate issuance, avoid CA rate limits): inspect latest `%TEMP%\mcp-p2-443-*\caddy-stderr.log` (and stdout if needed). Extract `tls.obtain` and `http.acme_client` issuance attempts, `challenge failed`, `problem.type/detail`, `certificate obtained successfully`, `authorization failed`, `rateLimited` and any Caddy error message. Redact residential domain/IPv6/account URLs/credentials before sharing; never publish full local logs to this public repo. Verify Windows post-check scoped firewall and TCP443 listener counts read-only. Source: Caddy official troubleshooting https://caddyserver.com/docs/troubleshooting .
+
+**STOP:** Do not rerun PR #8 until specific root cause is established. Public-CA/CT consent covered one time-boxed test, not unlimited retries. ChatGPT regular Chat MCP `/mcp` remains CLOSED/UNVERIFIED, no public proxy deployed.
+
 ## Public CA certificate test: explicit owner approval — 2026-11-15
 
 - Owner directly **APPROVED** the separate stock-Caddy public **ACME TLS-ALPN-01 static-only certificate test**, after being notified that registered hostname may appear in **Certificate Transparency logs** and CA account/certificate/key storage can persist. Scope: exact laptop IPv6 TCP443 only, Windows Private ActiveStore rule scoped to Caddy executable, **300 seconds** bounded exposure and independent expiry watchdog. **No public MCP**, no CDP 9444, no router login, no port80/DNS provider/token.
